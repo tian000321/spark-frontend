@@ -1,0 +1,70 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f7fa;
+  --bg-card: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --border-color: #eeeeee;
+  --header-bg: #0B2B4E;
+  --header-text: #ffffff;
+  --btn-primary-bg: #0B2B4E;
+  --btn-primary-text: #ffffff;
+  --btn-success-bg: #2E7D32;
+  --btn-success-text: #ffffff;
+  --badge-green-bg: #e8f5e9;
+  --badge-green-text: #2E7D32;
+  --badge-blue-bg: #e3f2fd;
+  --badge-blue-text: #1565C0;
+  --badge-red-bg: #ffebee;
+  --badge-red-text: #D32F2F;
+  --badge-orange-bg: #fff3e0;
+  --badge-orange-text: #E65100;
+  --input-bg: #ffffff;
+  --input-border: #dddddd;
+  --shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+html[data-theme="dark"] {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-card: #0f3460;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #808080;
+  --border-color: #2a2a4a;
+  --header-bg: #0f3460;
+  --header-text: #e0e0e0;
+  --btn-primary-bg: #e94560;
+  --btn-primary-text: #ffffff;
+  --btn-success-bg: #2E7D32;
+  --btn-success-text: #ffffff;
+  --badge-green-bg: #1e3a2f;
+  --badge-green-text: #81c784;
+  --badge-blue-bg: #1a2a4a;
+  --badge-blue-text: #64b5f6;
+  --badge-red-bg: #4a1a1a;
+  --badge-red-text: #ef9a9a;
+  --badge-orange-bg: #4a3a1a;
+  --badge-orange-text: #ffb74d;
+  --input-bg: #16213e;
+  --input-border: #2a2a4a;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+* { box-sizing: border-box; }
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .desktop-nav { display: none !important; }
+  .hamburger-btn { display: block !important; }
+  .compliance-indicator { display: none; }
+}
+@media (min-width: 769px) {
+  .mobile-menu { display: none !important; }
+}

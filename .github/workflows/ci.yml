@@ -1,0 +1,47 @@
+name: Spark CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # 后端测试
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spark-server
+    steps:
+      - uses: actions/checkout@v4       # 拉取代码
+      - uses: actions/setup-node@v4     # 安装 Node.js
+        with:
+          node-version: 18
+      - run: npm ci                     # 安装依赖
+      - name: Start server and test
+        run: |
+          node app.js &                 # 启动后端（后台运行）
+          sleep 3                        # 等待3秒确保启动
+          npm test                       # 运行 18 个单元测试
+
+  # 前端构建和 E2E 测试
+  frontend-build-and-e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spark-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci                     # 安装前端依赖
+      - run: npm run build              # 构建前端，确保能正常编译
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+      - name: Run E2E tests
+        run: |
+          npm run dev &                 # 启动前端开发服务器（后台）
+          sleep 10                      # 等待10秒，让前端完全启动
+          npx playwright test --reporter=list   # 运行 10 个 E2E 测试
