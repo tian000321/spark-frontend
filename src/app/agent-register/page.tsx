@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { AgentContract } from '@/components/onboarding/ContractText';
 
 type Status = 'none' | 'pending' | 'approved' | 'signed';
 
@@ -37,7 +38,7 @@ export default function AgentRegisterPage() {
         <input placeholder="推广渠道 / 预计客户量" value={channel} onChange={(e) => setChannel(e.target.value)} style={inputStyle} />
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
           <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-          我已阅读并同意《星火科技代理加盟协议》
+          我已阅读并同意《代理加盟协议》
         </label>
         <button onClick={() => {
           if (!name || !phone) return alert('请填写姓名和电话');
@@ -69,20 +70,12 @@ export default function AgentRegisterPage() {
   if (status === 'approved') return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: 40 }}>
       <h2 style={{ fontSize: 24, marginBottom: 16 }}>📝 签署协议</h2>
-      <div style={{ background: '#f9fafb', padding: 20, borderRadius: 8, marginBottom: 20, maxHeight: 300, overflow: 'auto', fontSize: 13, lineHeight: 1.8 }}>
-        <p><strong>《星火科技代理加盟协议》</strong></p>
-        <ol>
-          <li>您保证提交的所有信息真实有效。</li>
-          <li>代理级别：{level === 'city' ? '市级代理' : level === 'district' ? '县区代理' : '智能体代理'}。</li>
-          <li>佣金比例：市级 1% 调度量，县区弹性 3%，智能体代理 2%。</li>
-          <li>代理年费将于签约后收取，一年内不可退。</li>
-          <li>本协议解释权归星火科技所有。</li>
-        </ol>
-        <p>签署日期：{new Date().toLocaleDateString()}</p>
+      <div style={{ background: '#f9fafb', padding: 20, borderRadius: 8, marginBottom: 20, maxHeight: 300, overflow: 'auto', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+        {AgentContract}
       </div>
       <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
         <input type="checkbox" onChange={(e) => setAgreed(e.target.checked)} />
-        我已阅读并同意以上协议
+        我已阅读并同意以上完整协议
       </label>
       <button onClick={() => { if (!agreed) return alert('请先同意协议'); updateStatus('signed'); alert('签约成功！您已开通代理后台。'); }} style={{ width: '100%', padding: 12, background: agreed ? 'var(--btn-primary-bg)' : '#ccc', color: '#fff', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 'bold', cursor: agreed ? 'pointer' : 'not-allowed' }}>
         确认签署
@@ -96,12 +89,23 @@ export default function AgentRegisterPage() {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
 
+  const handleBindAccount = () => {
+    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
+    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
+    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
+    if (!aname || !number) return alert('请填写完整的账户信息');
+    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
+    alert(`${type} 账户绑定成功！`);
+  };
+
   const handleWithdraw = () => {
+    const account = localStorage.getItem('withdraw_account');
+    if (!account) return alert('请先绑定提现账户');
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
     if (amount > revenueTotal) return alert('余额不足');
     setRevenueTotal(prev => prev - amount);
-    setWithdrawHistory(prev => [...prev, { amount: withdrawAmount, time: new Date().toLocaleString() }]);
+    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
     setWithdrawAmount('');
     alert('提现申请已提交，预计 1-2 个工作日到账');
   };
@@ -153,17 +157,42 @@ export default function AgentRegisterPage() {
       {activeTab === 'withdraw' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
           <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>可提现佣金：¥{revenueTotal.toFixed(2)}</p>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+
+          <div style={{ marginBottom: 24, padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+            <p style={{ fontWeight: 500, marginBottom: 12 }}>提现账户 (本人实名)</p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+              <select id="accountType" style={{ ...inputStyle, minWidth: 120 }}>
+                <option value="wechat">微信支付</option>
+                <option value="alipay">支付宝</option>
+                <option value="bank">银行卡</option>
+              </select>
+              <input id="accountName" placeholder="户名" style={{ ...inputStyle, flex: 1 }} />
+              <input id="accountNumber" placeholder="账号" style={{ ...inputStyle, flex: 1 }} />
+              <button onClick={handleBindAccount} style={{ padding: '10px 20px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>
+                绑定 / 更新
+              </button>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              * 请绑定本人实名账户，提现信息与绑定账户一致方可提现。
+            </p>
+          </div>
+
+          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
+            可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong>
+          </p>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
             <input placeholder="提现金额" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-            <button onClick={handleWithdraw} style={{ padding: '10px 24px', background: 'var(--btn-success-bg)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>申请提现</button>
+            <button onClick={handleWithdraw} style={{ padding: '10px 24px', background: 'var(--btn-success-bg)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>
+              申请提现
+            </button>
           </div>
           <div style={{ fontSize: 13 }}>
-            <p style={{ fontWeight: 500, marginBottom: 8 }}>提现记录：</p>
+            <p style={{ fontWeight: 500, marginBottom: 8 }}>提现记录</p>
             {withdrawHistory.length === 0 && <p style={{ color: 'var(--text-muted)' }}>暂无记录</p>}
             {withdrawHistory.map((item, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-color)' }}>
-                <span>¥{item.amount}</span><span style={{ color: 'var(--text-muted)' }}>{item.time}</span>
+                <span>¥{item.amount}</span>
+                <span style={{ color: 'var(--text-muted)' }}>{item.time}</span>
               </div>
             ))}
           </div>
