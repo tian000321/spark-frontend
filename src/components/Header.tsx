@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import ComplianceStatus from './ComplianceStatus';
 
@@ -22,6 +22,20 @@ const dropItemStyle: React.CSSProperties = {
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 全局点击关闭菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOnboardingOpen(false);
+      }
+    };
+    if (onboardingOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onboardingOpen]);
 
   return (
     <header style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 50 }}>
@@ -38,8 +52,8 @@ export default function Header() {
           <Link href="/agents" style={navLinkStyle}>智能体市场</Link>
           <Link href="/node-market" style={navLinkStyle}>节点市场</Link>
           
-          {/* 下拉入驻菜单 */}
-          <div style={{ position: 'relative' }}>
+          {/* 下拉入驻菜单 — 无遮罩层，使用全局监听关闭 */}
+          <div style={{ position: 'relative' }} ref={menuRef}>
             <span
               onClick={() => setOnboardingOpen(!onboardingOpen)}
               style={{ ...navLinkStyle, cursor: 'pointer', userSelect: 'none' }}
@@ -47,23 +61,17 @@ export default function Header() {
               入驻 ▾
             </span>
             {onboardingOpen && (
-              <>
-                <div
-                  onClick={() => setOnboardingOpen(false)}
-                  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
-                />
-                <div style={{
-                  position: 'absolute', top: '100%', left: 0,
-                  background: 'var(--bg-card)', border: '1px solid var(--border-color)',
-                  borderRadius: 8, padding: '8px 0', minWidth: 150, zIndex: 100,
-                  boxShadow: 'var(--shadow)'
-                }}>
-                  <Link href="/creator" onClick={() => setOnboardingOpen(false)} style={dropItemStyle}>🎨 创作者入驻</Link>
-                  <Link href="/developer-register" onClick={() => setOnboardingOpen(false)} style={dropItemStyle}>💻 开发者入驻</Link>
-                  <Link href="/nodes" onClick={() => setOnboardingOpen(false)} style={dropItemStyle}>🖥️ 节点入驻</Link>
-                  <Link href="/agent-register" onClick={() => setOnboardingOpen(false)} style={dropItemStyle}>🤝 代理加盟</Link>
-                </div>
-              </>
+              <div style={{
+                position: 'absolute', top: '100%', left: 0,
+                background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+                borderRadius: 8, padding: '8px 0', minWidth: 150, zIndex: 100,
+                boxShadow: 'var(--shadow)'
+              }}>
+                <Link href="/creator" onClick={() => setOnboardingOpen(false)} style={dropItemStyle}>🎨 创作者入驻</Link>
+                <Link href="/developer-register" onClick={() => setOnboardingOpen(false)} style={dropItemStyle}>💻 开发者入驻</Link>
+                <Link href="/nodes" onClick={() => setOnboardingOpen(false)} style={dropItemStyle}>🖥️ 节点入驻</Link>
+                <Link href="/agent-register" onClick={() => setOnboardingOpen(false)} style={dropItemStyle}>🤝 代理加盟</Link>
+              </div>
             )}
           </div>
 
