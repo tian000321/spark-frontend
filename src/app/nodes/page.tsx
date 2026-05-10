@@ -13,6 +13,13 @@ export default function ProviderPage() {
   const [agreed, setAgreed] = useState(false);
   const [activeTab, setActiveTab] = useState<'nodes' | 'revenue' | 'withdraw'>('nodes');
 
+  // 已签约后的 Hooks
+  const [nodeCount, setNodeCount] = useState(0);
+  const [revenueTotal, setRevenueTotal] = useState(0);
+  const [taskCount, setTaskCount] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
+
   useEffect(() => {
     const saved = localStorage.getItem('provider_status');
     if (saved) setStatus(saved as Status);
@@ -21,6 +28,27 @@ export default function ProviderPage() {
   const updateStatus = (s: Status) => {
     setStatus(s);
     localStorage.setItem('provider_status', s);
+  };
+
+  const handleBindAccount = () => {
+    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
+    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
+    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
+    if (!aname || !number) return alert('请填写完整的账户信息');
+    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
+    alert(`${type} 账户绑定成功！`);
+  };
+
+  const handleWithdraw = () => {
+    const account = localStorage.getItem('withdraw_account');
+    if (!account) return alert('请先绑定提现账户');
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
+    if (amount > revenueTotal) return alert('余额不足');
+    setRevenueTotal(prev => prev - amount);
+    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
+    setWithdrawAmount('');
+    alert('提现申请已提交，预计 1-2 个工作日到账');
   };
 
   // === 未申请 ===
@@ -80,33 +108,6 @@ export default function ProviderPage() {
   );
 
   // === 已签约：算力提供者后台 ===
-  const [nodeCount, setNodeCount] = useState(0);
-  const [revenueTotal, setRevenueTotal] = useState(0);
-  const [taskCount, setTaskCount] = useState(0);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
-
-  const handleBindAccount = () => {
-    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
-    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
-    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
-    if (!aname || !number) return alert('请填写完整的账户信息');
-    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
-    alert(`${type} 账户绑定成功！`);
-  };
-
-  const handleWithdraw = () => {
-    const account = localStorage.getItem('withdraw_account');
-    if (!account) return alert('请先绑定提现账户');
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
-    if (amount > revenueTotal) return alert('余额不足');
-    setRevenueTotal(prev => prev - amount);
-    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
-    setWithdrawAmount('');
-    alert('提现申请已提交，预计 1-2 个工作日到账');
-  };
-
   return (
     <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto' }}>
       <h1 style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 8 }}>🖥️ 节点提供者平台</h1>
@@ -155,7 +156,6 @@ export default function ProviderPage() {
       {activeTab === 'withdraw' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
           <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
-
           <div style={{ marginBottom: 24, padding: 16, background: '#f9fafb', borderRadius: 8 }}>
             <p style={{ fontWeight: 500, marginBottom: 12 }}>提现账户 (企业实名)</p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -174,7 +174,6 @@ export default function ProviderPage() {
               * 请绑定企业对公账户或法人账户，提现信息与绑定账户一致方可提现。
             </p>
           </div>
-
           <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
             可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong>
           </p>

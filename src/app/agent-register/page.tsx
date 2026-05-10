@@ -13,6 +13,12 @@ export default function AgentRegisterPage() {
   const [agreed, setAgreed] = useState(false);
   const [activeTab, setActiveTab] = useState<'customers' | 'revenue' | 'withdraw'>('customers');
 
+  // 已签约后的 Hooks
+  const [customerCount, setCustomerCount] = useState(0);
+  const [revenueTotal, setRevenueTotal] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
+
   useEffect(() => {
     const saved = localStorage.getItem('agent_status');
     if (saved) setStatus(saved as Status);
@@ -21,6 +27,27 @@ export default function AgentRegisterPage() {
   const updateStatus = (s: Status) => {
     setStatus(s);
     localStorage.setItem('agent_status', s);
+  };
+
+  const handleBindAccount = () => {
+    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
+    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
+    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
+    if (!aname || !number) return alert('请填写完整的账户信息');
+    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
+    alert(`${type} 账户绑定成功！`);
+  };
+
+  const handleWithdraw = () => {
+    const account = localStorage.getItem('withdraw_account');
+    if (!account) return alert('请先绑定提现账户');
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
+    if (amount > revenueTotal) return alert('余额不足');
+    setRevenueTotal(prev => prev - amount);
+    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
+    setWithdrawAmount('');
+    alert('提现申请已提交，预计 1-2 个工作日到账');
   };
 
   // === 未申请 ===
@@ -84,32 +111,6 @@ export default function AgentRegisterPage() {
   );
 
   // === 已签约：代理后台 ===
-  const [customerCount, setCustomerCount] = useState(0);
-  const [revenueTotal, setRevenueTotal] = useState(0);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
-
-  const handleBindAccount = () => {
-    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
-    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
-    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
-    if (!aname || !number) return alert('请填写完整的账户信息');
-    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
-    alert(`${type} 账户绑定成功！`);
-  };
-
-  const handleWithdraw = () => {
-    const account = localStorage.getItem('withdraw_account');
-    if (!account) return alert('请先绑定提现账户');
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
-    if (amount > revenueTotal) return alert('余额不足');
-    setRevenueTotal(prev => prev - amount);
-    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
-    setWithdrawAmount('');
-    alert('提现申请已提交，预计 1-2 个工作日到账');
-  };
-
   return (
     <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto' }}>
       <h1 style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 8 }}>🤝 代理后台</h1>
@@ -157,7 +158,6 @@ export default function AgentRegisterPage() {
       {activeTab === 'withdraw' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
           <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
-
           <div style={{ marginBottom: 24, padding: 16, background: '#f9fafb', borderRadius: 8 }}>
             <p style={{ fontWeight: 500, marginBottom: 12 }}>提现账户 (本人实名)</p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -176,7 +176,6 @@ export default function AgentRegisterPage() {
               * 请绑定本人实名账户，提现信息与绑定账户一致方可提现。
             </p>
           </div>
-
           <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
             可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong>
           </p>

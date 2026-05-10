@@ -12,6 +12,14 @@ export default function DeveloperRegisterPage() {
   const [agreed, setAgreed] = useState(false);
   const [activeTab, setActiveTab] = useState<'agents' | 'revenue' | 'withdraw'>('agents');
 
+  // 已签约状态的 Hooks — 必须放在所有条件返回之前
+  const [agentName, setAgentName] = useState('');
+  const [capability, setCapability] = useState('');
+  const [revenueTotal, setRevenueTotal] = useState(0);
+  const [apiCalls, setApiCalls] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
+
   useEffect(() => {
     const saved = localStorage.getItem('developer_status');
     if (saved) setStatus(saved as Status);
@@ -20,6 +28,34 @@ export default function DeveloperRegisterPage() {
   const updateStatus = (s: Status) => {
     setStatus(s);
     localStorage.setItem('developer_status', s);
+  };
+
+  const handlePublish = () => {
+    if (!agentName || !capability) return alert('请填写智能体名称和能力');
+    alert('智能体已提交审核！');
+    setAgentName('');
+    setCapability('');
+  };
+
+  const handleBindAccount = () => {
+    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
+    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
+    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
+    if (!aname || !number) return alert('请填写完整的账户信息');
+    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
+    alert(`${type} 账户绑定成功！`);
+  };
+
+  const handleWithdraw = () => {
+    const account = localStorage.getItem('withdraw_account');
+    if (!account) return alert('请先绑定提现账户');
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
+    if (amount > revenueTotal) return alert('余额不足');
+    setRevenueTotal(prev => prev - amount);
+    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
+    setWithdrawAmount('');
+    alert('提现申请已提交，预计 1-2 个工作日到账');
   };
 
   // === 未申请 ===
@@ -78,41 +114,6 @@ export default function DeveloperRegisterPage() {
   );
 
   // === 已签约：开发者后台 ===
-  const [agentName, setAgentName] = useState('');
-  const [capability, setCapability] = useState('');
-  const [revenueTotal, setRevenueTotal] = useState(0);
-  const [apiCalls, setApiCalls] = useState(0);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
-
-  const handlePublish = () => {
-    if (!agentName || !capability) return alert('请填写智能体名称和能力');
-    alert('智能体已提交审核！');
-    setAgentName('');
-    setCapability('');
-  };
-
-  const handleBindAccount = () => {
-    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
-    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
-    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
-    if (!aname || !number) return alert('请填写完整的账户信息');
-    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
-    alert(`${type} 账户绑定成功！`);
-  };
-
-  const handleWithdraw = () => {
-    const account = localStorage.getItem('withdraw_account');
-    if (!account) return alert('请先绑定提现账户');
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
-    if (amount > revenueTotal) return alert('余额不足');
-    setRevenueTotal(prev => prev - amount);
-    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
-    setWithdrawAmount('');
-    alert('提现申请已提交，预计 1-2 个工作日到账');
-  };
-
   return (
     <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto' }}>
       <h1 style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 8 }}>💻 开发者平台</h1>
@@ -161,7 +162,6 @@ export default function DeveloperRegisterPage() {
       {activeTab === 'withdraw' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
           <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
-
           <div style={{ marginBottom: 24, padding: 16, background: '#f9fafb', borderRadius: 8 }}>
             <p style={{ fontWeight: 500, marginBottom: 12 }}>提现账户 (本人实名)</p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -180,7 +180,6 @@ export default function DeveloperRegisterPage() {
               * 请绑定本人实名账户，提现信息与绑定账户一致方可提现。
             </p>
           </div>
-
           <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
             可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong>
           </p>

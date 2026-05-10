@@ -12,6 +12,17 @@ export default function CreatorPage() {
   const [agreed, setAgreed] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'sandbox' | 'revenue' | 'withdraw'>('upload');
 
+  // 已签约后的 Hooks，必须在所有条件返回之前
+  const [packageName, setPackageName] = useState('');
+  const [styleTag, setStyleTag] = useState('');
+  const [bpmRange, setBpmRange] = useState('60-80');
+  const [licenseType, setLicenseType] = useState('exclusive');
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [revenueTotal, setRevenueTotal] = useState(0);
+  const [plays, setPlays] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
+
   useEffect(() => {
     const saved = localStorage.getItem('creator_status');
     if (saved) setStatus(saved as Status);
@@ -20,6 +31,33 @@ export default function CreatorPage() {
   const updateStatus = (s: Status) => {
     setStatus(s);
     localStorage.setItem('creator_status', s);
+  };
+
+  const handleUpload = () => {
+    if (!packageName || !styleTag) { setUploadStatus('请填写名称和风格标签'); return; }
+    setUploadStatus('上传中...');
+    setTimeout(() => { setUploadStatus('上传成功！已进入沙箱审核'); setPackageName(''); setStyleTag(''); }, 1500);
+  };
+
+  const handleBindAccount = () => {
+    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
+    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
+    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
+    if (!aname || !number) return alert('请填写完整的账户信息');
+    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
+    alert(`${type} 账户绑定成功！`);
+  };
+
+  const handleWithdraw = () => {
+    const account = localStorage.getItem('withdraw_account');
+    if (!account) return alert('请先绑定提现账户');
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
+    if (amount > revenueTotal) return alert('余额不足');
+    setRevenueTotal(prev => prev - amount);
+    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
+    setWithdrawAmount('');
+    alert('提现申请已提交，预计 1-2 个工作日到账');
   };
 
   // === 未申请 ===
@@ -78,43 +116,6 @@ export default function CreatorPage() {
   );
 
   // === 已签约：创作者后台 ===
-  const [packageName, setPackageName] = useState('');
-  const [styleTag, setStyleTag] = useState('');
-  const [bpmRange, setBpmRange] = useState('60-80');
-  const [licenseType, setLicenseType] = useState('exclusive');
-  const [uploadStatus, setUploadStatus] = useState('');
-  const [revenueTotal, setRevenueTotal] = useState(0);
-  const [plays, setPlays] = useState(0);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
-
-  const handleUpload = () => {
-    if (!packageName || !styleTag) { setUploadStatus('请填写名称和风格标签'); return; }
-    setUploadStatus('上传中...');
-    setTimeout(() => { setUploadStatus('上传成功！已进入沙箱审核'); setPackageName(''); setStyleTag(''); }, 1500);
-  };
-
-  const handleBindAccount = () => {
-    const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
-    const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
-    const number = (document.getElementById('accountNumber') as HTMLInputElement)?.value;
-    if (!aname || !number) return alert('请填写完整的账户信息');
-    localStorage.setItem('withdraw_account', JSON.stringify({ type, name: aname, number }));
-    alert(`${type} 账户绑定成功！`);
-  };
-
-  const handleWithdraw = () => {
-    const account = localStorage.getItem('withdraw_account');
-    if (!account) return alert('请先绑定提现账户');
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
-    if (amount > revenueTotal) return alert('余额不足');
-    setRevenueTotal(prev => prev - amount);
-    setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
-    setWithdrawAmount('');
-    alert('提现申请已提交，预计 1-2 个工作日到账');
-  };
-
   return (
     <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto' }}>
       <h1 style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 8 }}>🎨 创作者平台</h1>
@@ -181,7 +182,6 @@ export default function CreatorPage() {
       {activeTab === 'withdraw' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
           <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
-
           <div style={{ marginBottom: 24, padding: 16, background: '#f9fafb', borderRadius: 8 }}>
             <p style={{ fontWeight: 500, marginBottom: 12 }}>提现账户 (本人实名)</p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -200,7 +200,6 @@ export default function CreatorPage() {
               * 请绑定本人实名账户，提现信息与绑定账户一致方可提现。
             </p>
           </div>
-
           <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
             可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong>
           </p>
