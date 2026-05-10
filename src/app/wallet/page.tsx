@@ -55,6 +55,4 @@ export default function WalletPage() {
       )}
     </div>
   );
-}div>
-  );
 }
