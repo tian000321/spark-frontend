@@ -106,7 +106,7 @@ export default function Header() {
           <span onClick={() => { setMobileOpen(false); goTo('/trust'); }} style={navStyle}>信任</span>
           <span onClick={() => { setMobileOpen(false); goTo('/admin'); }} style={navStyle}>管理</span>
           <span onClick={() => { setMobileOpen(false); goTo('/tech-center'); }} style={navStyle}>技术交流</span>
-          <span onClick={() => { setMobileOpen(false); goTo('/console'); }} style={navStyle}>场所运营台</span>
+          <span onClick={() => { setMobileOpen(false); goTo('/console'); }} style={navStyle}>智能嗨吧控台</span>
           <span onClick={() => { setMobileOpen(false); goTo('/market'); }} style={navStyle}>氛围包市场</span>
         </div>
       )}

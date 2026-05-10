@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import ModeSelector from '@/components/ModeSelector';
 import PlanInterpreter from '@/components/PlanInterpreter';
@@ -7,51 +6,256 @@ import VetoButton from '@/components/VetoButton';
 import BPMGauge from '@/components/BPMGauge';
 import CostCounter from '@/components/CostCounter';
 
-export default function ConsolePage() {
-  const [currentMode, setCurrentMode] = useState('MODE_A');
-  const [bpm, setBpm] = useState(72);
-  const [cost, setCost] = useState(0.47);
-  const [plan, setPlan] = useState({
+// 模拟歌曲库
+const songLibrary = [
+  { id: '1', title: 'Midnight Pulse', artist: 'DeepWaves', style: 'Techno', bpm: 128, duration: '4:32', energy: 'high' },
+  { id: '2', title: 'City Lights', artist: 'LateNight', style: 'Jazz', bpm: 72, duration: '3:50', energy: 'low' },
+  { id: '3', title: 'Bass Drop', artist: 'ClubThunder', style: 'House', bpm: 130, duration: '5:15', energy: 'high' },
+  { id: '4', title: 'Silk Road', artist: 'SilkSounds', style: 'Ambient', bpm: 80, duration: '6:10', energy: 'medium' },
+  { id: '5', title: 'Rock Anthem', artist: 'LiveBandX', style: 'Rock', bpm: 110, duration: '4:05', energy: 'high' },
+];
+
+const mockDeviceStatus = {
+  auraBoxOnline: true,
+  soulKnobHeartbeat: '1.2s',
+  currentMode: 'MODE_A',
+  bpm: 72,
+  cost: 0.47,
+  plan: {
     summary: '维持 MODE_A 暖场氛围，BPM 稳定在 72，灯光暖黄渐变',
     details: '预计未来 15 分钟内不切换模式，根据场内人数自动微调音量',
-  });
+  },
+};
 
+export default function ConsolePage() {
+  const [currentMode, setCurrentMode] = useState(mockDeviceStatus.currentMode);
+  const [bpm, setBpm] = useState(mockDeviceStatus.bpm);
+  const [cost, setCost] = useState(mockDeviceStatus.cost);
+  const [plan, setPlan] = useState(mockDeviceStatus.plan);
+  const [activeFeature, setActiveFeature] = useState<'songs' | 'dj' | 'sing' | 'scene' | 'tuner'>('songs');
+
+  // 场景化模式切换
   const handleModeChange = (mode: string) => {
     setCurrentMode(mode);
-    // 模拟 BPM 与成本变化
     const bpmMap: Record<string, number> = { MODE_A: 72, MODE_B: 128, MODE_C: 80, MODE_D: 0 };
-    setBpm(bpmMap[mode] || 0);
+    setBpm(bpmMap[mode] || 72);
     setCost(Math.random() * 2 + 0.3);
+    const planMap: Record<string, { summary: string; details: string }> = {
+      MODE_A: { summary: '暖场模式已激活，爵士/氛围电子，暖黄光缓慢渐变', details: 'BPM 60-80，预计持续至客人陆续入场结束' },
+      MODE_B: { summary: '午夜高潮模式已激活，Techno/House，频闪激光联动', details: 'BPM 120-140，能量逐渐攀升，灯光与低频同步' },
+      MODE_C: { summary: 'Chill/After Party 模式已激活，Downtempo/Ambient，深蓝紫呼吸', details: 'BPM 70-90，营造放松氛围，灯光柔和渐变' },
+      MODE_D: { summary: '应急安全模式！全场静音，灯光全亮白光', details: '所有 AI 决策暂停，等待人工恢复操作' },
+    };
+    setPlan(planMap[mode] || mockDeviceStatus.plan);
   };
 
-  const handleVeto = () => {
-    setCurrentMode('MODE_D');
-    setBpm(0);
-    setPlan({ summary: '紧急停止已触发', details: '全场静音，灯光全亮白光' });
-  };
+  const handleVeto = () => handleModeChange('MODE_D');
+
+  // 智能调音模拟
+  const [eqBands, setEqBands] = useState({ low: 0, mid: 0, high: 0 });
+  const [reverb, setReverb] = useState(30);
+  const [autoTune, setAutoTune] = useState(true);
 
   return (
-    <div className="p-4 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Aura 运营台 · 暗夜场所</h1>
+    <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
+      {/* ========= 页面标题 ========= */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: 4 }}>
+          🎛️ 智能嗨吧控台
+        </h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+          实时掌控现场氛围 · 旋转选模式，按下急停，一切尽在指尖
+        </p>
+      </div>
 
-      {/* 实时指标卡片 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {/* ========= 实时指标卡片 ========= */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         <BPMGauge bpm={bpm} />
         <CostCounter cost={cost} />
-        <div className="bg-white p-4 rounded-lg shadow text-center">
-          <p className="text-xs text-gray-500">当前模式</p>
-          <p className="text-2xl font-mono font-bold text-blue-600">{currentMode}</p>
+        <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 12, border: '1px solid var(--border-color)', textAlign: 'center' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>当前模式</p>
+          <p style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--btn-primary-bg)' }}>{currentMode}</p>
         </div>
       </div>
 
-      {/* 计划解释器 */}
-      <PlanInterpreter plan={plan} />
+      {/* ========= 计划解释器 ========= */}
+      <div style={{ marginBottom: 24 }}>
+        <PlanInterpreter plan={plan} />
+      </div>
 
-      {/* 氛围模式快速切换 */}
-      <ModeSelector currentMode={currentMode} onModeChange={handleModeChange} />
+      {/* ========= 功能选项卡 ========= */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', borderBottom: '2px solid var(--border-color)', paddingBottom: 12 }}>
+        {[
+          { key: 'songs', label: '🎵 歌曲库' },
+          { key: 'dj', label: '🎧 DJ模式' },
+          { key: 'sing', label: '🎤 唱歌模式' },
+          { key: 'scene', label: '🎭 场景托管' },
+          { key: 'tuner', label: '🎚️ 智能调音' },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveFeature(tab.key as any)}
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              background: 'transparent',
+              borderBottom: activeFeature === tab.key ? '2px solid var(--btn-primary-bg)' : '2px solid transparent',
+              color: activeFeature === tab.key ? 'var(--btn-primary-bg)' : 'var(--text-muted)',
+              fontWeight: activeFeature === tab.key ? 'bold' : 'normal',
+              cursor: 'pointer',
+              fontSize: 14,
+              marginBottom: -14,
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      {/* 否决按钮 */}
-      <VetoButton onVeto={handleVeto} />
+      {/* ========= 歌曲库 ========= */}
+      {activeFeature === 'songs' && (
+        <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)', marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>歌曲库</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
+                  <th style={{ padding: '8px' }}>歌曲</th>
+                  <th style={{ padding: '8px' }}>艺人</th>
+                  <th style={{ padding: '8px' }}>风格</th>
+                  <th style={{ padding: '8px' }}>BPM</th>
+                  <th style={{ padding: '8px' }}>时长</th>
+                  <th style={{ padding: '8px' }}>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {songLibrary.map((song) => (
+                  <tr key={song.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '8px', fontWeight: 500 }}>{song.title}</td>
+                    <td style={{ padding: '8px' }}>{song.artist}</td>
+                    <td style={{ padding: '8px' }}>{song.style}</td>
+                    <td style={{ padding: '8px' }}>{song.bpm}</td>
+                    <td style={{ padding: '8px' }}>{song.duration}</td>
+                    <td style={{ padding: '8px' }}>
+                      <button style={{ padding: '4px 12px', border: '1px solid var(--input-border)', borderRadius: 4, background: 'var(--input-bg)', cursor: 'pointer', fontSize: 12 }}>播放</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ========= DJ模式 ========= */}
+      {activeFeature === 'dj' && (
+        <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)', marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>AI DJ 控制台</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+              <p style={{ fontSize: 14, fontWeight: 500 }}>自动混音</p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>AI 自动对拍、BPM 平滑过渡</p>
+              <button style={{ marginTop: 8, padding: '6px 16px', background: 'var(--btn-primary-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>开启自动混音</button>
+            </div>
+            <div style={{ padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+              <p style={{ fontSize: 14, fontWeight: 500 }}>手动BPM调节</p>
+              <input type="range" min="60" max="160" value={bpm} onChange={(e) => setBpm(Number(e.target.value))} style={{ width: '100%' }} />
+              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>当前：{bpm} BPM</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========= 唱歌模式 ========= */}
+      {activeFeature === 'sing' && (
+        <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)', marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>智能唱歌 / 美声调音</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+              <p style={{ fontSize: 14, fontWeight: 500 }}>实时修音</p>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <input type="checkbox" checked={autoTune} onChange={(e) => setAutoTune(e.target.checked)} />
+                自动音准修正
+              </label>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>AI 不得擅自改变歌手原声特质</p>
+            </div>
+            <div style={{ padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+              <p style={{ fontSize: 14, fontWeight: 500 }}>声场优化</p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>混响/延迟自适应空间声场</p>
+              <input type="range" min="0" max="100" value={reverb} onChange={(e) => setReverb(Number(e.target.value))} style={{ width: '100%' }} />
+              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>混响强度：{reverb}%</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========= 场景托管 ========= */}
+      {activeFeature === 'scene' && (
+        <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)', marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>一键场景托管</h3>
+          <ModeSelector currentMode={currentMode} onModeChange={handleModeChange} />
+        </div>
+      )}
+
+      {/* ========= 智能调音 ========= */}
+      {activeFeature === 'tuner' && (
+        <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)', marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>智能均衡器</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {['low', 'mid', 'high'].map((band) => (
+              <div key={band} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ width: 40, fontSize: 14, fontWeight: 500 }}>{band === 'low' ? '低频' : band === 'mid' ? '中频' : '高频'}</span>
+                <input
+                  type="range"
+                  min="-12"
+                  max="12"
+                  value={eqBands[band]}
+                  onChange={(e) => setEqBands({ ...eqBands, [band]: Number(e.target.value) })}
+                  style={{ flex: 1 }}
+                />
+                <span style={{ width: 40, textAlign: 'right', fontSize: 13 }}>{eqBands[band] > 0 ? '+' : ''}{eqBands[band]} dB</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ========= 否决按钮 + 设备状态 ========= */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 16 }}>
+        <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <VetoButton onVeto={handleVeto} />
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 12 }}>按下立即静音 + 全亮白光（&lt;100ms 急停）</p>
+        </div>
+        <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border-color)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>📡 设备状态</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14 }}>Aura Box</span>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '2px 12px', borderRadius: 12, fontSize: 12,
+                background: mockDeviceStatus.auraBoxOnline ? '#d1fae5' : '#f3f4f6',
+                color: mockDeviceStatus.auraBoxOnline ? '#065f46' : '#6b7280',
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: mockDeviceStatus.auraBoxOnline ? '#10b981' : '#9ca3af' }} />
+                {mockDeviceStatus.auraBoxOnline ? '在线' : '离线'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14 }}>Soul Knob 心跳</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{mockDeviceStatus.soulKnobHeartbeat}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14 }}>DMX 灯光</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>已连接 · 512 通道</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14 }}>音响输出</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>3.5mm 线路输出</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
