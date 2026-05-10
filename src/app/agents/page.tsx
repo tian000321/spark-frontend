@@ -19,7 +19,7 @@ export default function AgentsPage() {
     params.set('limit', String(perPage));
     fetch(`http://localhost:8080/v1/agents?${params}`)
       .then(r => r.json())
-      .then(data => { setAgents(data.agents); setTotal(data.total); })
+     .then(data => { setAgents(data.agents || []); setTotal(data.total || 0); })
       .catch(() => {});
   };
 
