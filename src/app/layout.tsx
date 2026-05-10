@@ -28,12 +28,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main style={{ flex: 1, width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
           {children}
         </main>
-        <footer className="desktop-nav" style={{ borderTop: '1px solid var(--border-color)', background: 'var(--bg-card)', padding: '12px 0', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)' }}>
-          © 2026 星火算力 · 隐私政策 · 服务条款
         <footer className="text-center text-xs text-gray-500 py-4 border-t mt-8">
-  <p>星火科技 Spark Tech</p>
-  <p className="mt-1">星是规则，火是相信 · 配优质的资源，解客户的安心</p>
-</footer>
+          <p>星火科技 Spark Tech</p>
+          <p className="mt-1">星是规则，火是相信 · 配优质的资源，解客户的安心</p>
+          <p className="mt-2">© 2026 星火算力 · 隐私政策 · 服务条款</p>
+        </footer>
       </body>
     </html>
   );
