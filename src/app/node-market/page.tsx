@@ -19,7 +19,7 @@ export default function NodeMarketPage() {
     params.set('limit', String(perPage));
     fetch(`http://localhost:8080/v1/marketplace/nodes?${params}`)
       .then(r => r.json())
-      .then(data => { setNodes(data.nodes); setTotal(data.total); })
+      .then(data => { setNodes(data.nodes || []); setTotal(data.total || 0); })
       .catch(() => {});
   };
 
