@@ -4,6 +4,15 @@ import { AgentContract } from '@/components/onboarding/ContractText';
 
 type Status = 'none' | 'pending' | 'approved' | 'signed';
 
+interface Customer {
+  id: string;
+  name: string;
+  level: string;
+  signedAt: string;
+  consumption: number;
+  commission: number;
+}
+
 export default function AgentRegisterPage() {
   const [status, setStatus] = useState<Status>('none');
   const [name, setName] = useState('');
@@ -11,13 +20,19 @@ export default function AgentRegisterPage() {
   const [level, setLevel] = useState('city');
   const [channel, setChannel] = useState('');
   const [agreed, setAgreed] = useState(false);
-  const [activeTab, setActiveTab] = useState<'customers' | 'revenue' | 'withdraw'>('customers');
-
-  // 已签约后的 Hooks
-  const [customerCount, setCustomerCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<'customers' | 'revenue' | 'withdraw' | 'stats'>('customers');
   const [revenueTotal, setRevenueTotal] = useState(0);
+  const [customerCount, setCustomerCount] = useState(0);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
+
+  const [customers, setCustomers] = useState<Customer[]>([
+    { id: '1', name: '暗夜酒吧', level: '市级', signedAt: '2026-04-15', consumption: 48000, commission: 480 },
+    { id: '2', name: '星辰 Livehouse', level: '市级', signedAt: '2026-05-01', consumption: 32000, commission: 320 },
+    { id: '3', name: '海边 Club', level: '县区', signedAt: '2026-05-08', consumption: 12000, commission: 360 },
+  ]);
+
+  const [chartData] = useState([480, 320, 500, 410, 380, 620, 550]);
 
   useEffect(() => {
     const saved = localStorage.getItem('agent_status');
@@ -50,21 +65,21 @@ export default function AgentRegisterPage() {
     alert('提现申请已提交，预计 1-2 个工作日到账');
   };
 
-  // === 未申请 ===
+  // ===== 未申请 =====
   if (status === 'none') return (
     <div style={{ maxWidth: 500, margin: '40px auto', padding: '0 20px' }}>
       <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>🤝 代理加盟申请</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <input placeholder="真实姓名 / 企业名称" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
-        <input placeholder="联系电话" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} />
-        <select value={level} onChange={(e) => setLevel(e.target.value)} style={inputStyle}>
+        <input placeholder="真实姓名 / 企业名称" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+        <input placeholder="联系电话" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
+        <select value={level} onChange={e => setLevel(e.target.value)} style={inputStyle}>
           <option value="city">市级代理 (年费 ¥10,000)</option>
           <option value="district">县区代理 (年费 ¥1,000)</option>
           <option value="agent">智能体代理 (年费 ¥1,000/个/年)</option>
         </select>
-        <input placeholder="推广渠道 / 预计客户量" value={channel} onChange={(e) => setChannel(e.target.value)} style={inputStyle} />
+        <input placeholder="推广渠道 / 预计客户量" value={channel} onChange={e => setChannel(e.target.value)} style={inputStyle} />
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+          <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
           我已阅读并同意《代理加盟协议》
         </label>
         <button onClick={() => {
@@ -82,10 +97,10 @@ export default function AgentRegisterPage() {
     </div>
   );
 
-  // === 审核中 ===
+  // ===== 审核中 =====
   if (status === 'pending') return (
     <div style={{ textAlign: 'center', padding: 80 }}>
-      <h2 style={{ fontSize: 24, marginBottom: 12 }}>⏳ 审核中</h2>
+      <h2>⏳ 审核中</h2>
       <p style={{ color: 'var(--text-muted)' }}>您的代理申请已提交，平台将在 1-3 个工作日内审核。</p>
       <button onClick={() => { if (confirm('模拟审核通过？')) updateStatus('approved'); }} style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--input-border)', borderRadius: 6, background: 'var(--input-bg)', cursor: 'pointer' }}>
         模拟审核通过
@@ -93,15 +108,15 @@ export default function AgentRegisterPage() {
     </div>
   );
 
-  // === 待签约 ===
+  // ===== 待签约 =====
   if (status === 'approved') return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: 40 }}>
-      <h2 style={{ fontSize: 24, marginBottom: 16 }}>📝 签署协议</h2>
+      <h2>📝 签署协议</h2>
       <div style={{ background: '#f9fafb', padding: 20, borderRadius: 8, marginBottom: 20, maxHeight: 300, overflow: 'auto', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
         {AgentContract}
       </div>
       <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-        <input type="checkbox" onChange={(e) => setAgreed(e.target.checked)} />
+        <input type="checkbox" onChange={e => setAgreed(e.target.checked)} />
         我已阅读并同意以上完整协议
       </label>
       <button onClick={() => { if (!agreed) return alert('请先同意协议'); updateStatus('signed'); alert('签约成功！您已开通代理后台。'); }} style={{ width: '100%', padding: 12, background: agreed ? 'var(--btn-primary-bg)' : '#ccc', color: '#fff', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 'bold', cursor: agreed ? 'pointer' : 'not-allowed' }}>
@@ -110,31 +125,61 @@ export default function AgentRegisterPage() {
     </div>
   );
 
-  // === 已签约：代理后台 ===
+  // ===== 已签约：代理后台 =====
   return (
-    <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ padding: '40px 20px', maxWidth: 1100, margin: '0 auto' }}>
       <h1 style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 8 }}>🤝 代理后台</h1>
       <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>已签约 · {level === 'city' ? '市级代理' : level === 'district' ? '县区代理' : '智能体代理'} · 推广客户，按业绩获得佣金。</p>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border-color)' }}>
-        {(['customers', 'revenue', 'withdraw'] as const).map(tab => (
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border-color)', flexWrap: 'wrap' }}>
+        {(['customers', 'revenue', 'withdraw', 'stats'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            style={{ padding: '10px 24px', border: 'none', background: 'transparent', borderBottom: activeTab === tab ? '2px solid var(--btn-primary-bg)' : '2px solid transparent', color: activeTab === tab ? 'var(--btn-primary-bg)' : 'var(--text-muted)', fontWeight: activeTab === tab ? 'bold' : 'normal', cursor: 'pointer', marginBottom: -2 }}>
-            {tab === 'customers' && '👥 客户管理'} {tab === 'revenue' && '💰 佣金收益'} {tab === 'withdraw' && '💳 提现'}
+            style={{
+              padding: '10px 24px', border: 'none', background: 'transparent',
+              borderBottom: activeTab === tab ? '2px solid var(--btn-primary-bg)' : '2px solid transparent',
+              color: activeTab === tab ? 'var(--btn-primary-bg)' : 'var(--text-muted)',
+              fontWeight: activeTab === tab ? 'bold' : 'normal', cursor: 'pointer', marginBottom: -2
+            }}>
+            {tab === 'customers' && '👥 客户管理'}
+            {tab === 'revenue' && '💰 佣金收益'}
+            {tab === 'withdraw' && '💳 提现'}
+            {tab === 'stats' && '📊 统计'}
           </button>
         ))}
       </div>
 
+      {/* 客户管理 */}
       {activeTab === 'customers' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
-          <h3 style={{ marginBottom: 16 }}>👥 客户管理</h3>
-          <p style={{ color: 'var(--text-muted)' }}>已拓展客户：{customerCount} 个</p>
-          <div style={{ border: '2px dashed var(--border-color)', padding: 32, borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', marginTop: 16 }}>
-            📁 录入新客户（后续开放）
+          <h3 style={{ marginBottom: 16 }}>已拓展客户</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
+                  <th style={{ padding: '8px' }}>客户名称</th>
+                  <th style={{ padding: '8px' }}>级别</th>
+                  <th style={{ padding: '8px' }}>签约时间</th>
+                  <th style={{ padding: '8px' }}>累计消费</th>
+                  <th style={{ padding: '8px' }}>佣金</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customers.map(c => (
+                  <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '8px', fontWeight: 500 }}>{c.name}</td>
+                    <td style={{ padding: '8px' }}>{c.level}</td>
+                    <td style={{ padding: '8px' }}>{c.signedAt}</td>
+                    <td style={{ padding: '8px' }}>¥{c.consumption.toLocaleString()}</td>
+                    <td style={{ padding: '8px', color: 'var(--btn-primary-bg)', fontWeight: 500 }}>¥{c.commission.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
+      {/* 收益 */}
       {activeTab === 'revenue' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
           <h3 style={{ marginBottom: 16 }}>💰 佣金收益</h3>
@@ -155,6 +200,23 @@ export default function AgentRegisterPage() {
         </div>
       )}
 
+      {/* 统计 */}
+      {activeTab === 'stats' && (
+        <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
+          <h3 style={{ marginBottom: 16 }}>📊 近7天佣金趋势 (¥)</h3>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 200, padding: '20px 0' }}>
+            {chartData.map((val, i) => (
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>¥{val}</span>
+                <div style={{ width: '100%', maxWidth: 40, height: val / 1.5, background: 'var(--btn-primary-bg)', borderRadius: '4px 4px 0 0', opacity: 0.8 }} />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>Day {i + 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 提现 */}
       {activeTab === 'withdraw' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
           <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
@@ -172,13 +234,9 @@ export default function AgentRegisterPage() {
                 绑定 / 更新
               </button>
             </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              * 请绑定本人实名账户，提现信息与绑定账户一致方可提现。
-            </p>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>* 请绑定本人实名账户，提现信息与绑定账户一致方可提现。</p>
           </div>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
-            可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong>
-          </p>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong></p>
           <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
             <input placeholder="提现金额" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
             <button onClick={handleWithdraw} style={{ padding: '10px 24px', background: 'var(--btn-success-bg)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>
