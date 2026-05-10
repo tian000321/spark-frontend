@@ -1,4 +1,6 @@
 'use client';
+import DeviceStatusCard from '@/components/DeviceStatusCard';
+import VetoEventLog from '@/components/VetoEventLog';
 import { useState, useEffect } from 'react';
 
 export default function TrustPage() {
@@ -163,6 +165,7 @@ export default function TrustPage() {
       <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 11, marginTop: 24 }}>
         💡 以上数据每3秒自动更新 · 季度合规报告可下载 · 年度第三方审计中
       </p>
-    </div>
+    <div className="mt-6"><DeviceStatusCard /></div>
+<div className="mt-6"><VetoEventLog /></div></div>
   );
 }
