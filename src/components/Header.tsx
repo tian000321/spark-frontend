@@ -1,4 +1,7 @@
 'use client';
+<NavItem href="/console" icon={<ConsoleIcon />} label="场所运营台" />
+<NavItem href="/market" icon={<MarketIcon />} label="氛围包市场" />
+<NavItem href="/creator" icon={<CreatorIcon />} label="创作者平台" />
 import { useState } from 'react';
 import ComplianceStatus from './ComplianceStatus';
 
