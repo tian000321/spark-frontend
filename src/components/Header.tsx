@@ -47,9 +47,9 @@ export default function Header() {
 
         {/* 桌面端导航 */}
         <nav className="desktop-nav" style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <span onClick={() => goTo('/chat')} style={navStyle}>星火智能体</span>
+          <span onClick={() => goTo('/chat')} style={navStyle}>星火懂你</span>
           <span onClick={() => goTo('/tasks')} style={navStyle}>任务中心</span>
-          <span onClick={() => goTo('/agents')} style={navStyle}>智能体市场</span>
+          <span onClick={() => goTo('/agents')} style={navStyle}>智能市场</span>
           <span onClick={() => goTo('/node-market')} style={navStyle}>节点市场</span>
           
           {/* 下拉入驻菜单 */}
@@ -67,10 +67,10 @@ export default function Header() {
                 borderRadius: 8, padding: '8px 0', minWidth: 150, zIndex: 100,
                 boxShadow: 'var(--shadow)'
               }}>
-                <button onClick={(e) => { e.stopPropagation(); setOnboardingOpen(false); goTo('/creator'); }} style={dropItemStyle}>🎨 创作者入驻</button>
-                <button onClick={(e) => { e.stopPropagation(); setOnboardingOpen(false); goTo('/developer-register'); }} style={dropItemStyle}>💻 开发者入驻</button>
+                <button onClick={(e) => { e.stopPropagation(); setOnboardingOpen(false); goTo('/creator'); }} style={dropItemStyle}>🎨 创作入驻</button>
+                <button onClick={(e) => { e.stopPropagation(); setOnboardingOpen(false); goTo('/developer-register'); }} style={dropItemStyle}>💻 开发入驻</button>
                 <button onClick={(e) => { e.stopPropagation(); setOnboardingOpen(false); goTo('/nodes'); }} style={dropItemStyle}>🖥️ 节点入驻</button>
-                <button onClick={(e) => { e.stopPropagation(); setOnboardingOpen(false); goTo('/agent-register'); }} style={dropItemStyle}>🤝 代理加盟</button>
+                <button onClick={(e) => { e.stopPropagation(); setOnboardingOpen(false); goTo('/agent-register'); }} style={dropItemStyle}>🤝 代理入驻</button>
               </div>
             )}
           </div>
@@ -79,8 +79,8 @@ export default function Header() {
           <span onClick={() => goTo('/trust')} style={navStyle}>信任</span>
           <span onClick={() => goTo('/admin')} style={navStyle}>管理</span>
           <span onClick={() => goTo('/tech-center')} style={navStyle}>技术交流</span>
-          <span onClick={() => goTo('/console')} style={navStyle}>场所运营台</span>
-          <span onClick={() => goTo('/market')} style={navStyle}>氛围包市场</span>
+          <span onClick={() => goTo('/console')} style={navStyle}>嗨吧控台</span>
+          
         </nav>
 
         <ComplianceStatus />
@@ -93,21 +93,21 @@ export default function Header() {
       {/* 移动端下拉菜单 */}
       {mobileOpen && (
         <div className="mobile-menu" style={{ background: 'var(--bg-card)', borderTop: '1px solid var(--border-color)', padding: '10px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <span onClick={() => { setMobileOpen(false); goTo('/chat'); }} style={navStyle}>星火智能体</span>
+          <span onClick={() => { setMobileOpen(false); goTo('/chat'); }} style={navStyle}>星火懂你</span>
           <span onClick={() => { setMobileOpen(false); goTo('/tasks'); }} style={navStyle}>任务中心</span>
-          <span onClick={() => { setMobileOpen(false); goTo('/agents'); }} style={navStyle}>智能体市场</span>
+          <span onClick={() => { setMobileOpen(false); goTo('/agents'); }} style={navStyle}>智能市场</span>
           <span onClick={() => { setMobileOpen(false); goTo('/node-market'); }} style={navStyle}>节点市场</span>
           <p style={{ margin: '8px 0 4px', fontWeight: 'bold', fontSize: 13 }}>入驻</p>
-          <span onClick={() => { setMobileOpen(false); goTo('/creator'); }} style={navStyle}>🎨 创作者入驻</span>
-          <span onClick={() => { setMobileOpen(false); goTo('/developer-register'); }} style={navStyle}>💻 开发者入驻</span>
+          <span onClick={() => { setMobileOpen(false); goTo('/creator'); }} style={navStyle}>🎨 创作入驻</span>
+          <span onClick={() => { setMobileOpen(false); goTo('/developer-register'); }} style={navStyle}>💻 开发入驻</span>
           <span onClick={() => { setMobileOpen(false); goTo('/nodes'); }} style={navStyle}>🖥️ 节点入驻</span>
-          <span onClick={() => { setMobileOpen(false); goTo('/agent-register'); }} style={navStyle}>🤝 代理加盟</span>
+          <span onClick={() => { setMobileOpen(false); goTo('/agent-register'); }} style={navStyle}>🤝 代理入驻</span>
           <span onClick={() => { setMobileOpen(false); goTo('/wallet'); }} style={navStyle}>钱包</span>
           <span onClick={() => { setMobileOpen(false); goTo('/trust'); }} style={navStyle}>信任</span>
           <span onClick={() => { setMobileOpen(false); goTo('/admin'); }} style={navStyle}>管理</span>
           <span onClick={() => { setMobileOpen(false); goTo('/tech-center'); }} style={navStyle}>技术交流</span>
-          <span onClick={() => { setMobileOpen(false); goTo('/console'); }} style={navStyle}>智能嗨吧控台</span>
-          <span onClick={() => { setMobileOpen(false); goTo('/market'); }} style={navStyle}>氛围包市场</span>
+          <span onClick={() => { setMobileOpen(false); goTo('/console'); }} style={navStyle}>嗨吧控台</span>
+          <span onClick={() => { setMobileOpen(false); goTo('/market'); }} style={navStyle}>嗨吧市场</span>
         </div>
       )}
     </header>

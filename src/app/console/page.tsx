@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ModeSelector from '@/components/ModeSelector';
 import PlanInterpreter from '@/components/PlanInterpreter';
 import VetoButton from '@/components/VetoButton';
@@ -15,6 +16,13 @@ const songLibrary = [
   { id: '5', title: 'Rock Anthem', artist: 'LiveBandX', style: 'Rock', bpm: 110, duration: '4:05', energy: 'high' },
 ];
 
+// 模拟氛围包市场数据（与 /market 页面一致）
+const mockVibePacks = [
+  { id: 'p1', name: '午夜高潮-暗夜', creator: 'DJ Spark', style: 'Techno / House', bpm: '120-140', calls: 2300, price: '¥29.90/次', icon: '🎵', license: 'exclusive', copyrightProof: '0xabc123...' },
+  { id: 'p2', name: '暖场爵士-晚餐时光', creator: 'Mellow Beats', style: 'Jazz / Ambient', bpm: '60-80', calls: 1203, price: '¥19.90/次', icon: '🎷', license: 'cc', copyrightProof: '0xdef456...' },
+  { id: 'p3', name: '深蓝 Chill 包', creator: 'Late Night Lab', style: 'Downtempo / Ambient', bpm: '70-90', calls: 891, price: '¥24.90/次', icon: '🌊', license: 'non-exclusive', copyrightProof: '0x789ghi...' },
+];
+
 const mockDeviceStatus = {
   auraBoxOnline: true,
   soulKnobHeartbeat: '1.2s',
@@ -28,13 +36,25 @@ const mockDeviceStatus = {
 };
 
 export default function ConsolePage() {
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab');
+  const validTabs = ['songs', 'dj', 'sing', 'scene', 'tuner', 'market'];
+  const defaultTab = initialTab && validTabs.includes(initialTab) ? initialTab : 'songs';
+
   const [currentMode, setCurrentMode] = useState(mockDeviceStatus.currentMode);
   const [bpm, setBpm] = useState(mockDeviceStatus.bpm);
   const [cost, setCost] = useState(mockDeviceStatus.cost);
   const [plan, setPlan] = useState(mockDeviceStatus.plan);
-  const [activeFeature, setActiveFeature] = useState<'songs' | 'dj' | 'sing' | 'scene' | 'tuner'>('songs');
+  const [activeFeature, setActiveFeature] = useState<string>(defaultTab);
 
-  // 场景化模式切换
+  // 监听 URL 参数变化，切换选项卡
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && validTabs.includes(tab)) {
+      setActiveFeature(tab);
+    }
+  }, [searchParams]);
+
   const handleModeChange = (mode: string) => {
     setCurrentMode(mode);
     const bpmMap: Record<string, number> = { MODE_A: 72, MODE_B: 128, MODE_C: 80, MODE_D: 0 };
@@ -51,7 +71,7 @@ export default function ConsolePage() {
 
   const handleVeto = () => handleModeChange('MODE_D');
 
-  // 智能调音模拟
+  // 智能调音状态
   const [eqBands, setEqBands] = useState({ low: 0, mid: 0, high: 0 });
   const [reverb, setReverb] = useState(30);
   const [autoTune, setAutoTune] = useState(true);
@@ -91,10 +111,11 @@ export default function ConsolePage() {
           { key: 'sing', label: '🎤 唱歌模式' },
           { key: 'scene', label: '🎭 场景托管' },
           { key: 'tuner', label: '🎚️ 智能调音' },
+          { key: 'market', label: '🛒 嗨吧市场' },
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveFeature(tab.key as any)}
+            onClick={() => setActiveFeature(tab.key)}
             style={{
               padding: '10px 20px',
               border: 'none',
@@ -214,6 +235,44 @@ export default function ConsolePage() {
                   style={{ flex: 1 }}
                 />
                 <span style={{ width: 40, textAlign: 'right', fontSize: 13 }}>{eqBands[band] > 0 ? '+' : ''}{eqBands[band]} dB</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ========= 嗨吧市场 ========= */}
+      {activeFeature === 'market' && (
+        <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)', marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>🛒 氛围包市场</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>浏览由专业 DJ 和音乐制作人创作的氛围包，一键应用到你的场所。</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+            {mockVibePacks.map((pkg) => (
+              <div key={pkg.id} style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 24 }}>{pkg.icon}</span>
+                    <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{pkg.name}</h3>
+                  </div>
+                  <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 12, background: pkg.license === 'exclusive' ? '#d1fae5' : '#dbeafe', color: pkg.license === 'exclusive' ? '#065f46' : '#1e40af' }}>
+                    {pkg.license === 'exclusive' ? '独家' : pkg.license === 'cc' ? 'CC' : '非独家'}
+                  </span>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{pkg.creator}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                  <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: 11, background: '#f3f4f6', color: '#6b7280' }}>{pkg.style}</span>
+                  <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: 11, background: '#f3f4f6', color: '#6b7280' }}>🎵 {pkg.bpm} BPM</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>📞 {pkg.calls?.toLocaleString()} 次调用</span>
+                  <span style={{ fontWeight: 500, color: 'var(--btn-primary-bg)' }}>{pkg.price}</span>
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 12, wordBreak: 'break-all' }}>
+                  存证：{pkg.copyrightProof}
+                </div>
+                <button style={{ width: '100%', padding: '10px 0', background: 'var(--btn-primary-bg)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>
+                  应用到此场所
+                </button>
               </div>
             ))}
           </div>
