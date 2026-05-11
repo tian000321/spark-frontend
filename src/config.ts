@@ -1,0 +1,24 @@
+// 星火科技全局常量，统一管理所有硬编码值
+export const CONFIG = {
+  PRICING: {
+    AURA_MONTHLY: 299,
+    SPARK_ONE_MONTHLY: 99,
+    TRUST_REPORT_MONTHLY: 199,
+    AGENT_CITY_YEARLY: 10000,
+    AGENT_DISTRICT_YEARLY: 1000,
+  },
+  REVENUE_SPLIT: {
+    CREATOR: 0.7,
+    DEVELOPER: 0.7,
+    PROVIDER_FIRST_YEAR: 0.95,
+    PROVIDER_AFTER: 0.9,
+    AGENT_CITY: 0.01,
+    AGENT_DISTRICT: 0.03,
+  },
+  COMPENSATION_MAX: 200,
+  RESERVE_MIN: 8000,
+  API_BASE_URL: 'http://localhost:8080',
+  AI_LABEL: '本氛围由 Spark AI 生成',
+  AI_AUDIO_TAG: '1kHz-0.1s',
+  VETO_TIMEOUT_MS: 100,
+} as const;
