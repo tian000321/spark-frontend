@@ -1,4 +1,5 @@
 'use client';
+import DJConsole from '@/components/DJConsole';
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import SparkCard from '@/components/ui/SparkCard';
