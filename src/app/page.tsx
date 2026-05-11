@@ -1,4 +1,5 @@
-﻿import SparkCard from '@/components/ui/SparkCard';
+﻿'use client';
+import SparkCard from '@/components/ui/SparkCard';
 import SparkBadge from '@/components/ui/SparkBadge';
 
 const stats = [
