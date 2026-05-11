@@ -176,15 +176,33 @@ const SoundLightPanel = ({ bpm, setBpm, currentMode, setCurrentMode }: any) => {
   );
 };
 
-const VetoButton = ({ onVeto }: { onVeto: () => void }) => {
-  const [pressed, setPressed] = useState(false);
-  const handlePress = () => { setPressed(true); onVeto(); setTimeout(() => setPressed(false), 2000); };
+const VetoButton = ({ onVeto, plan }: { onVeto: () => void; plan: { summary: string; details: string } }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
   return (
-    <div style={{ textAlign: 'center' }}>
-      <button onClick={handlePress} disabled={pressed} style={{ width: 100, height: 100, borderRadius: '50%', border: 'none', background: pressed ? '#9ca3af' : '#ef4444', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>
-        {pressed ? '已否决' : '否决'}
-      </button>
-    </div>
+    <>
+      <div style={{ textAlign: 'center' }}>
+        <button onClick={() => setShowConfirm(true)} style={{
+          width: 100, height: 100, borderRadius: '50%', border: 'none', background: '#ef4444',
+          color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer',
+          boxShadow: 'var(--spark-shadow-md)', transition: 'all 0.2s'
+        }}>
+          否决
+        </button>
+      </div>
+      {showConfirm && (
+        <SparkModal isOpen={true} onClose={() => setShowConfirm(false)} title="⚠️ 确认否决">
+          <div style={{ marginBottom: 20, padding: 16, background: 'rgba(255,255,255,0.04)', borderRadius: 12, fontSize: 14, lineHeight: 1.6 }}>
+            <strong>🤖 当前 AI 计划：</strong><br />
+            {plan.summary}<br />
+            <span style={{ fontSize: 13, color: 'var(--spark-text-secondary)' }}>{plan.details}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <SparkButton variant="secondary" onClick={() => setShowConfirm(false)}>取消</SparkButton>
+            <SparkButton variant="danger" onClick={() => { setShowConfirm(false); onVeto(); }}>确认否决</SparkButton>
+          </div>
+        </SparkModal>
+      )}
+    </>
   );
 };
 
@@ -357,7 +375,7 @@ export default function ConsolePage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
         <SparkCard padding={24} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <VetoButton onVeto={handleVeto} />
+          <VetoButton onVeto={handleVeto} plan={plan} />
           <div style={{ fontSize: 'var(--spark-font-size-xs)', color: 'var(--spark-text-muted)', marginTop: 12 }}>按下立即静音 + 全亮白光（&lt;100ms 急停）</div>
         </SparkCard>
         <SparkCard padding={24}>

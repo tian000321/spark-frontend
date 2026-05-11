@@ -22,11 +22,21 @@ interface Task {
 }
 
 const MOCK_TASKS: Task[] = [
-  { id: 'task-001', name: '图像分类模型训练', type: '图像识别', urgency: '正常', estimatedCost: 120, actualCost: 118, compensationStatus: 'insuring', compensationAmount: 0, isManaged: true, status: '已完成', createdAt: '2026-05-09', progress: 100 },
-  { id: 'task-002', name: '文本摘要生成', type: '自然语言处理', urgency: '加急', estimatedCost: 80, actualCost: 85, compensationStatus: 'paid', compensationAmount: 10, isManaged: false, status: '运行中', createdAt: '2026-05-10', progress: 65 },
-  { id: 'task-003', name: '语音识别微调', type: '语音技术', urgency: '限时', estimatedCost: 200, actualCost: 200, compensationStatus: 'paid', compensationAmount: 400, isManaged: true, status: '失败', createdAt: '2026-05-08', progress: 42 },
-  { id: 'task-004', name: '目标检测推理', type: '图像识别', urgency: '正常', estimatedCost: 60, actualCost: 55, compensationStatus: 'none', compensationAmount: 0, isManaged: false, status: '已完成', createdAt: '2026-05-07', progress: 100 },
-  { id: 'task-005', name: '自然语言推理', type: '自然语言处理', urgency: '正常', estimatedCost: 95, actualCost: 90, compensationStatus: 'insuring', compensationAmount: 0, isManaged: true, status: '已完成', createdAt: '2026-05-06', progress: 100 },
+  { id: 'task-001', name: '图像分类模型训练', type: '图像识别', urgency: '正常', estimatedCost: 120, actualCost: 118,compensationStatus: 'paid' → compensationStatus: 'unavailable'
+compensationStatus: 'insuring' → compensationStatus: 'unavailable'
+compensationAmount: 任意数字 → compensationAmount: 0
+  { id: 'task-002', name: '文本摘要生成', type: '自然语言处理', urgency: '加急', estimatedCost: 80, actualCost: 85, compensationStatus: 'paid', compensationStatus: 'paid' → compensationStatus: 'unavailable'
+compensationStatus: 'insuring' → compensationStatus: 'unavailable'
+compensationAmount: 任意数字 → compensationAmount: 0
+  { id: 'task-003', name: '语音识别微调', type: '语音技术', urgency: '限时', estimatedCost: 200, actualCost: 200, compensationStatus: 'paid' → compensationStatus: 'unavailable'
+compensationStatus: 'insuring' → compensationStatus: 'unavailable'
+compensationAmount: 任意数字 → compensationAmount: 0
+  { id: 'task-004', name: '目标检测推理', type: '图像识别', urgency: '正常', estimatedCost: 60, actualCost: 55, compensationStatus: 'paid' → compensationStatus: 'unavailable'
+compensationStatus: 'insuring' → compensationStatus: 'unavailable'
+compensationAmount: 任意数字 → compensationAmount: 0
+  { id: 'task-005', name: '自然语言推理', type: '自然语言处理', urgency: '正常', estimatedCost: 95, actualCost: 90, compensationStatus: 'paid' → compensationStatus: 'unavailable'
+compensationStatus: 'insuring' → compensationStatus: 'unavailable'
+compensationAmount: 任意数字 → compensationAmount: 0
 ];
 
 const TASK_TYPES = ['训练', '推理', '微调'];
@@ -75,11 +85,13 @@ const TaskCard = ({ task, onRetry, onViewCompensation }: { task: Task; onRetry: 
         {/* 赔付状态 & 操作按钮 */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            {task.compensationStatus === 'paid' ? (
-              <SparkBadge variant="danger">已赔付 ¥{task.compensationAmount}</SparkBadge>
-            ) : task.compensationStatus === 'insuring' ? (
-              <SparkBadge variant="success">保障中</SparkBadge>
-            ) : null}
+            {task.compensationStatus === 'unavailable' ? (
+  <span style={{ fontSize: 12, color: 'var(--spark-text-muted)' }}>赔付即将上线</span>
+) : task.compensationStatus === 'paid' ? (
+  <SparkBadge variant="danger">已赔付 ¥{task.compensationAmount}</SparkBadge>
+) : task.compensationStatus === 'insuring' ? (
+  <SparkBadge variant="success">保障中</SparkBadge>
+) : null}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {task.status === '失败' && (

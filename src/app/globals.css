@@ -78,3 +78,8 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+.spark-card-hoverable:hover {
+  background: var(--spark-bg-card-hover);
+  box-shadow: var(--spark-shadow-md);
+  transform: translateY(-2px);
+}
