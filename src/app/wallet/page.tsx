@@ -1,5 +1,6 @@
 'use client';
 import AuthGuard from '@/components/AuthGuard';
+import PaymentPassword from '@/components/PaymentPassword';
 import { useState, useEffect } from 'react';
 
 export default function WalletPage() {
@@ -9,9 +10,11 @@ export default function WalletPage() {
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [amount, setAmount] = useState('');
   const [transactions, setTransactions] = useState<{ type: string; amount: number; time: string }[]>([]);
+  const [showPaymentPassword, setShowPaymentPassword] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<'set' | 'modify'>('set');
+  const [pendingWithdraw, setPendingWithdraw] = useState<number | null>(null);
 
   useEffect(() => {
-    // 模拟数据：可用余额 + 冻结资金
     setBalance(8520.00);
     setFrozenBalance(1500.00);
     setTransactions([
@@ -29,18 +32,56 @@ export default function WalletPage() {
     setTransactions(prev => [{ type: '充值', amount: val, time: new Date().toLocaleString() }, ...prev]);
     setAmount('');
     setShowRecharge(false);
-    alert('充值成功！');
   };
 
-  const handleWithdraw = () => {
-    const val = parseFloat(amount);
-    if (isNaN(val) || val <= 0) { alert('请输入有效金额'); return; }
-    if (val > balance) { alert(`余额不足！当前可用余额 ¥${balance.toFixed(2)}，无法提现 ¥${val.toFixed(2)}`); return; }
-    setBalance(prev => prev - val);
-    setTransactions(prev => [{ type: '提现', amount: -val, time: new Date().toLocaleString() }, ...prev]);
+  const handleWithdraw = (password?: string) => {
+    const val = pendingWithdraw || parseFloat(amount);
+    if (!val || isNaN(val) || val <= 0) { alert('请输入有效金额'); return; }
+    
+    const paymentPwd = localStorage.getItem('payment_password');
+    if (!paymentPwd) {
+      alert('请先设置支付密码，以确保资金安全');
+      setPaymentMode('set');
+      setShowPaymentPassword(true);
+      return;
+    }
+
+    if (val > balance) {
+      alert(`余额不足！当前可用余额 ¥${balance.toFixed(2)}，无法提现 ¥${val.toFixed(2)}`);
+      return;
+    }
+
+    if (!password) {
+      setPendingWithdraw(val);
+      setShowPaymentPassword(true);
+      return;
+    }
+
+    if (password !== paymentPwd) {
+      alert('支付密码错误，提现失败');
+      setPendingWithdraw(null);
+      return;
+    }
+
+    const withdrawAmount = pendingWithdraw || val;
+    setBalance(prev => prev - withdrawAmount);
+    setTransactions(prev => [{ type: '提现', amount: -withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
     setAmount('');
     setShowWithdraw(false);
+    setPendingWithdraw(null);
     alert('提现申请已提交，预计 1-2 个工作日到账');
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentPassword(false);
+    if (pendingWithdraw) {
+      handleWithdraw(localStorage.getItem('payment_password') || '');
+    }
+  };
+
+  const openPaymentSettings = () => {
+    setPaymentMode(localStorage.getItem('payment_password') ? 'modify' : 'set');
+    setShowPaymentPassword(true);
   };
 
   return (
@@ -74,6 +115,11 @@ export default function WalletPage() {
               提现
             </button>
           </div>
+          <div style={{ marginTop: 16, textAlign: 'center' }}>
+            <button onClick={openPaymentSettings} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--input-border)', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: 'var(--text-muted)' }}>
+              🔐 支付密码
+            </button>
+          </div>
         </div>
 
         {/* 交易记录 */}
@@ -96,9 +142,10 @@ export default function WalletPage() {
         {/* 充值弹窗 */}
         {showRecharge && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-            <div style={{ background: 'var(--bg-card)', padding: 30, borderRadius: 12, width: '90%', maxWidth: 360 }}>
+            <div style={{ background: 'var(--bg-card)', padding: 30, borderRadius: 12, width: '90%', maxWidth: 360, position: 'relative' }}>
+              <button onClick={() => setShowRecharge(false)} style={{ position: 'absolute', top: 10, right: 14, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
               <h3 style={{ marginBottom: 16 }}>💰 充值</h3>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="请输入金额" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--input-border)', borderRadius: 8, fontSize: 14, background: 'var(--input-bg)', color: 'var(--text-primary)', marginBottom: 16 }} />
+              <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="请输入金额" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--input-border)', borderRadius: 8, fontSize: 14, background: 'var(--input-bg)', color: 'var(--text-primary)', marginBottom: 16 }} />
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <button onClick={() => setShowRecharge(false)} style={{ padding: '8px 16px', border: '1px solid var(--input-border)', borderRadius: 6, background: 'var(--input-bg)', color: 'var(--text-primary)' }}>取消</button>
                 <button onClick={handleRecharge} style={{ padding: '8px 16px', background: 'var(--btn-success-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>确认充值</button>
@@ -110,14 +157,34 @@ export default function WalletPage() {
         {/* 提现弹窗 */}
         {showWithdraw && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-            <div style={{ background: 'var(--bg-card)', padding: 30, borderRadius: 12, width: '90%', maxWidth: 360 }}>
+            <div style={{ background: 'var(--bg-card)', padding: 30, borderRadius: 12, width: '90%', maxWidth: 360, position: 'relative' }}>
+              <button onClick={() => setShowWithdraw(false)} style={{ position: 'absolute', top: 10, right: 14, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
               <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>可用余额：¥{balance.toFixed(2)}</p>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="请输入提现金额" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--input-border)', borderRadius: 8, fontSize: 14, background: 'var(--input-bg)', color: 'var(--text-primary)', marginBottom: 16 }} />
+              <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="请输入提现金额" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--input-border)', borderRadius: 8, fontSize: 14, background: 'var(--input-bg)', color: 'var(--text-primary)', marginBottom: 16 }} />
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <button onClick={() => setShowWithdraw(false)} style={{ padding: '8px 16px', border: '1px solid var(--input-border)', borderRadius: 6, background: 'var(--input-bg)', color: 'var(--text-primary)' }}>取消</button>
-                <button onClick={handleWithdraw} style={{ padding: '8px 16px', background: 'var(--btn-primary-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>确认提现</button>
+                <button onClick={() => handleWithdraw()} style={{ padding: '8px 16px', background: 'var(--btn-primary-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>确认提现</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* 支付密码弹窗 */}
+        {showPaymentPassword && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+            <div style={{ background: 'var(--bg-card)', padding: 30, borderRadius: 12, width: '90%', maxWidth: 400, position: 'relative' }}>
+              <button
+                onClick={() => { setShowPaymentPassword(false); setPendingWithdraw(null); }}
+                style={{ position: 'absolute', top: 10, right: 14, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                ✕
+              </button>
+              <PaymentPassword
+                mode={paymentMode}
+                onSuccess={handlePaymentSuccess}
+                onCancel={() => { setShowPaymentPassword(false); setPendingWithdraw(null); }}
+              />
             </div>
           </div>
         )}

@@ -17,36 +17,40 @@ interface VibePackage {
 }
 
 export default function CreatorPage() {
-  // --- 入驻状态 ---
   const [status, setStatus] = useState<Status>('none');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [style, setStyle] = useState('');
   const [agreed, setAgreed] = useState(false);
+  const [activeTab, setActiveTab] = useState<'upload' | 'packages' | 'revenue' | 'withdraw' | 'stats' | 'contract'>('upload');
 
-  // --- 已签约后台 ---
-  const [activeTab, setActiveTab] = useState<'upload' | 'packages' | 'revenue' | 'withdraw' | 'stats'>('upload');
+  // 上传相关状态
   const [packageName, setPackageName] = useState('');
   const [styleTag, setStyleTag] = useState('');
   const [bpmRange, setBpmRange] = useState('60-80');
   const [licenseType, setLicenseType] = useState('exclusive');
   const [uploadStatus, setUploadStatus] = useState('');
+
+  // 收益与提现
   const [revenueTotal, setRevenueTotal] = useState(0);
   const [plays, setPlays] = useState(0);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
 
-  // 氛围包列表
+  // 氛围包管理
   const [packages, setPackages] = useState<VibePackage[]>([
     { id: '1', name: '午夜高潮-暗夜专属', style: 'Techno / House', bpm: '120-140', license: 'exclusive', status: 'published', calls: 2300, copyrightProof: '0xabc123...' },
     { id: '2', name: '暖场爵士-晚餐时光', style: 'Jazz / Ambient', bpm: '60-80', license: 'cc', status: 'reviewing', calls: 0, copyrightProof: '0xdef456...' },
     { id: '3', name: '深蓝 Chill 包', style: 'Downtempo', bpm: '70-90', license: 'non-exclusive', status: 'unpublished', calls: 890, copyrightProof: '0x789ghi...' },
   ]);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editStyle, setEditStyle] = useState('');
+  // 编辑器相关状态
+  const [editingPkg, setEditingPkg] = useState<VibePackage | null>(null);
+  const [editorName, setEditorName] = useState('');
+  const [editorBpm, setEditorBpm] = useState('');
+  const [editorStyle, setEditorStyle] = useState('');
 
+  // 统计图表数据
   const [chartData] = useState([80, 150, 210, 140, 190, 260, 310]);
 
   useEffect(() => {
@@ -59,6 +63,7 @@ export default function CreatorPage() {
     localStorage.setItem('creator_status', s);
   };
 
+  // 上传氛围包
   const handleUpload = () => {
     if (!packageName || !styleTag) { setUploadStatus('请填写名称和风格标签'); return; }
     const newPkg: VibePackage = {
@@ -77,6 +82,7 @@ export default function CreatorPage() {
     setUploadStatus('上传成功！已进入沙箱审核');
   };
 
+  // 上下架操作
   const handleToggleStatus = (id: string) => {
     setPackages(prev =>
       prev.map(p => {
@@ -87,21 +93,23 @@ export default function CreatorPage() {
     );
   };
 
-  const handleEdit = (pkg: VibePackage) => {
-    setEditingId(pkg.id);
-    setEditName(pkg.name);
-    setEditStyle(pkg.style);
+  // 打开编辑器
+  const openEditor = (pkg: VibePackage) => {
+    setEditingPkg(pkg);
+    setEditorName(pkg.name);
+    setEditorBpm(pkg.bpm);
+    setEditorStyle(pkg.style);
   };
 
+  // 保存编辑
   const handleSaveEdit = () => {
-    if (!editingId) return;
-    setPackages(prev =>
-      prev.map(p => (p.id === editingId ? { ...p, name: editName, style: editStyle } : p))
-    );
-    setEditingId(null);
+    if (!editingPkg) return;
+    setPackages(prev => prev.map(p => p.id === editingPkg.id ? { ...p, name: editorName, bpm: editorBpm, style: editorStyle } : p));
+    setEditingPkg(null);
     alert('氛围包信息已更新');
   };
 
+  // 绑定账户
   const handleBindAccount = () => {
     const type = (document.getElementById('accountType') as HTMLSelectElement)?.value;
     const aname = (document.getElementById('accountName') as HTMLInputElement)?.value;
@@ -111,18 +119,24 @@ export default function CreatorPage() {
     alert(`${type} 账户绑定成功！`);
   };
 
+  // 提现
   const handleWithdraw = () => {
     const account = localStorage.getItem('withdraw_account');
     if (!account) return alert('请先绑定提现账户');
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount <= 0) return alert('请输入有效金额');
     if (amount > revenueTotal) return alert('余额不足');
+    const paymentPwd = localStorage.getItem('payment_password');
+    if (!paymentPwd) { alert('请先在钱包页面设置支付密码'); return; }
+    const inputPwd = prompt('请输入支付密码以确认提现：');
+    if (inputPwd !== paymentPwd) return alert('支付密码错误，提现失败');
     setRevenueTotal(prev => prev - amount);
     setWithdrawHistory(prev => [{ amount: withdrawAmount, time: new Date().toLocaleString() }, ...prev]);
     setWithdrawAmount('');
     alert('提现申请已提交，预计 1-2 个工作日到账');
   };
 
+  // 获取状态标签
   const getStatusTag = (s: PackageStatus) => {
     const map: Record<string, { text: string; color: string; textColor: string }> = {
       reviewing: { text: '审核中', color: '#fef3c7', textColor: '#92400e' },
@@ -134,10 +148,10 @@ export default function CreatorPage() {
     return <span style={{ padding: '2px 10px', borderRadius: 12, fontSize: 12, background: item.color, color: item.textColor }}>{item.text}</span>;
   };
 
-  // ===== 未申请 =====
+  // ===== 入驻状态路由 =====
   if (status === 'none') return (
     <div style={{ maxWidth: 500, margin: '40px auto', padding: '0 20px' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>🎨 创作者入驻申请</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>🎨 精英招募 · 创作者</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <input placeholder="真实姓名 / 艺名" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
         <input placeholder="联系电话" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
@@ -161,10 +175,9 @@ export default function CreatorPage() {
     </div>
   );
 
-  // ===== 审核中 =====
   if (status === 'pending') return (
     <div style={{ textAlign: 'center', padding: 80 }}>
-      <h2>⏳ 审核中</h2>
+      <h2 style={{ fontSize: 24, marginBottom: 12 }}>⏳ 审核中</h2>
       <p style={{ color: 'var(--text-muted)' }}>您的入驻申请已提交，平台将在 1-3 个工作日内审核。</p>
       <button onClick={() => { if (confirm('模拟审核通过？')) updateStatus('approved'); }} style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--input-border)', borderRadius: 6, background: 'var(--input-bg)', cursor: 'pointer' }}>
         模拟审核通过
@@ -172,10 +185,9 @@ export default function CreatorPage() {
     </div>
   );
 
-  // ===== 待签约 =====
   if (status === 'approved') return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: 40 }}>
-      <h2>📝 签署协议</h2>
+      <h2 style={{ fontSize: 24, marginBottom: 16 }}>📝 签署协议</h2>
       <div style={{ background: '#f9fafb', padding: 20, borderRadius: 8, marginBottom: 20, maxHeight: 300, overflow: 'auto', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
         {CreatorContract}
       </div>
@@ -195,20 +207,22 @@ export default function CreatorPage() {
       <h1 style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 8 }}>🎨 创作者平台</h1>
       <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>已签约 · 上传氛围包，审核通过后进入市场。</p>
 
+      {/* 选项卡 */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border-color)', flexWrap: 'wrap' }}>
-        {(['upload', 'packages', 'revenue', 'withdraw', 'stats'] as const).map(tab => (
+        {(['upload', 'packages', 'revenue', 'withdraw', 'stats', 'contract'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             style={{
-              padding: '10px 24px', border: 'none', background: 'transparent',
+              padding: '10px 20px', border: 'none', background: 'transparent',
               borderBottom: activeTab === tab ? '2px solid var(--btn-primary-bg)' : '2px solid transparent',
               color: activeTab === tab ? 'var(--btn-primary-bg)' : 'var(--text-muted)',
-              fontWeight: activeTab === tab ? 'bold' : 'normal', cursor: 'pointer', marginBottom: -2
+              fontWeight: activeTab === tab ? 'bold' : 'normal', cursor: 'pointer', marginBottom: -2, whiteSpace: 'nowrap'
             }}>
             {tab === 'upload' && '📤 上传氛围包'}
             {tab === 'packages' && '📦 我的氛围包'}
             {tab === 'revenue' && '💰 收益'}
             {tab === 'withdraw' && '💳 提现'}
             {tab === 'stats' && '📊 统计'}
+            {tab === 'contract' && '📝 合同'}
           </button>
         ))}
       </div>
@@ -235,7 +249,7 @@ export default function CreatorPage() {
         </div>
       )}
 
-      {/* 氛围包列表 */}
+      {/* 我的氛围包 */}
       {activeTab === 'packages' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
           <h3 style={{ marginBottom: 16 }}>我的氛围包</h3>
@@ -262,7 +276,7 @@ export default function CreatorPage() {
                     <td style={{ padding: '8px' }}>{pkg.calls.toLocaleString()}</td>
                     <td style={{ padding: '8px', fontSize: 11, color: 'var(--text-muted)', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }} title={pkg.copyrightProof}>{pkg.copyrightProof}</td>
                     <td style={{ padding: '8px', display: 'flex', gap: 6 }}>
-                      <button onClick={() => handleEdit(pkg)} style={{ padding: '4px 10px', border: '1px solid var(--input-border)', borderRadius: 4, background: 'var(--input-bg)', cursor: 'pointer', fontSize: 12 }}>编辑</button>
+                      <button onClick={() => openEditor(pkg)} style={{ padding: '4px 10px', border: '1px solid var(--input-border)', borderRadius: 4, background: 'var(--input-bg)', cursor: 'pointer', fontSize: 12 }}>编辑</button>
                       <button onClick={() => handleToggleStatus(pkg.id)} style={{ padding: '4px 10px', border: '1px solid var(--input-border)', borderRadius: 4, background: 'var(--input-bg)', cursor: 'pointer', fontSize: 12 }}>
                         {pkg.status === 'published' ? '下架' : '上架'}
                       </button>
@@ -273,15 +287,32 @@ export default function CreatorPage() {
             </table>
           </div>
 
-          {editingId && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-              <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, width: '90%', maxWidth: 400 }}>
-                <h3 style={{ marginBottom: 16 }}>编辑氛围包</h3>
-                <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="名称" style={{ ...inputStyle, marginBottom: 10 }} />
-                <input value={editStyle} onChange={e => setEditStyle(e.target.value)} placeholder="风格" style={{ ...inputStyle, marginBottom: 16 }} />
-                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                  <button onClick={() => setEditingId(null)} style={{ padding: '6px 16px', border: '1px solid var(--input-border)', borderRadius: 6, background: 'var(--input-bg)', cursor: 'pointer' }}>取消</button>
-                  <button onClick={handleSaveEdit} style={{ padding: '6px 16px', background: 'var(--btn-primary-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>保存</button>
+          {/* 编辑器弹窗 */}
+          {editingPkg && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+              <div style={{ background: 'var(--bg-card)', padding: 30, borderRadius: 12, width: '90%', maxWidth: 500 }}>
+                <h3 style={{ marginBottom: 16 }}>🎛️ 编辑氛围包</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 13 }}>名称</label>
+                    <input value={editorName} onChange={e => setEditorName(e.target.value)} style={{ ...inputStyle, marginTop: 4 }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13 }}>风格</label>
+                    <input value={editorStyle} onChange={e => setEditorStyle(e.target.value)} style={{ ...inputStyle, marginTop: 4 }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13 }}>BPM 范围</label>
+                    <input value={editorBpm} onChange={e => setEditorBpm(e.target.value)} style={{ ...inputStyle, marginTop: 4 }} />
+                  </div>
+                  <div style={{ padding: 20, background: '#f9fafb', borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--border-color)' }}>
+                    🎵 BPM 曲线编辑器（拖拽调节）
+                    <div style={{ height: 60, background: 'linear-gradient(to right, #00c6ff, #0072ff)', borderRadius: 6, marginTop: 8, opacity: 0.3 }} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+                  <button onClick={() => setEditingPkg(null)} style={{ padding: '8px 16px', border: '1px solid var(--input-border)', borderRadius: 6, background: 'var(--input-bg)', cursor: 'pointer' }}>取消</button>
+                  <button onClick={handleSaveEdit} style={{ padding: '8px 16px', background: 'var(--btn-primary-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>保存</button>
                 </div>
               </div>
             </div>
@@ -310,6 +341,42 @@ export default function CreatorPage() {
         </div>
       )}
 
+      {/* 提现 */}
+      {activeTab === 'withdraw' && (
+        <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
+          <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
+          <div style={{ marginBottom: 24, padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+            <p style={{ fontWeight: 500, marginBottom: 12 }}>提现账户 (本人实名)</p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+              <select id="accountType" style={{ ...inputStyle, minWidth: 120 }}>
+                <option value="wechat">微信支付</option>
+                <option value="alipay">支付宝</option>
+                <option value="bank">银行卡</option>
+              </select>
+              <input id="accountName" placeholder="户名" style={{ ...inputStyle, flex: 1 }} />
+              <input id="accountNumber" placeholder="账号" style={{ ...inputStyle, flex: 1 }} />
+              <button onClick={handleBindAccount} style={{ padding: '10px 20px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>绑定 / 更新</button>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>* 请绑定本人实名账户，提现信息与绑定账户一致方可提现。</p>
+          </div>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong></p>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+            <input placeholder="提现金额" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+            <button onClick={handleWithdraw} style={{ padding: '10px 24px', background: 'var(--btn-success-bg)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>申请提现</button>
+          </div>
+          <div style={{ fontSize: 13 }}>
+            <p style={{ fontWeight: 500, marginBottom: 8 }}>提现记录</p>
+            {withdrawHistory.length === 0 && <p style={{ color: 'var(--text-muted)' }}>暂无记录</p>}
+            {withdrawHistory.map((item, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-color)' }}>
+                <span>¥{item.amount}</span>
+                <span style={{ color: 'var(--text-muted)' }}>{item.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 统计 */}
       {activeTab === 'stats' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
@@ -326,42 +393,12 @@ export default function CreatorPage() {
         </div>
       )}
 
-      {/* 提现 */}
-      {activeTab === 'withdraw' && (
+      {/* 合同 */}
+      {activeTab === 'contract' && (
         <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
-          <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
-          <div style={{ marginBottom: 24, padding: 16, background: '#f9fafb', borderRadius: 8 }}>
-            <p style={{ fontWeight: 500, marginBottom: 12 }}>提现账户 (本人实名)</p>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-              <select id="accountType" style={{ ...inputStyle, minWidth: 120 }}>
-                <option value="wechat">微信支付</option>
-                <option value="alipay">支付宝</option>
-                <option value="bank">银行卡</option>
-              </select>
-              <input id="accountName" placeholder="户名" style={{ ...inputStyle, flex: 1 }} />
-              <input id="accountNumber" placeholder="账号" style={{ ...inputStyle, flex: 1 }} />
-              <button onClick={handleBindAccount} style={{ padding: '10px 20px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>
-                绑定 / 更新
-              </button>
-            </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>* 请绑定本人实名账户，提现信息与绑定账户一致方可提现。</p>
-          </div>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong></p>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-            <input placeholder="提现金额" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-            <button onClick={handleWithdraw} style={{ padding: '10px 24px', background: 'var(--btn-success-bg)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>
-              申请提现
-            </button>
-          </div>
-          <div style={{ fontSize: 13 }}>
-            <p style={{ fontWeight: 500, marginBottom: 8 }}>提现记录</p>
-            {withdrawHistory.length === 0 && <p style={{ color: 'var(--text-muted)' }}>暂无记录</p>}
-            {withdrawHistory.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-color)' }}>
-                <span>¥{item.amount}</span>
-                <span style={{ color: 'var(--text-muted)' }}>{item.time}</span>
-              </div>
-            ))}
+          <h3 style={{ marginBottom: 16 }}>📝 已签署协议</h3>
+          <div style={{ background: '#f9fafb', padding: 20, borderRadius: 8, maxHeight: 400, overflow: 'auto', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+            {CreatorContract}
           </div>
         </div>
       )}
