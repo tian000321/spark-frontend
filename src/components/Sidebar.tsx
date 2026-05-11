@@ -9,7 +9,8 @@ const menuItems = [
   { icon: '🖥️', label: '节点市场', href: '/node-market' },
   { icon: '📋', label: '任务中心', href: '/tasks' },
   { icon: '👛', label: '钱包', href: '/wallet' },
-  { icon: '⭐', label: '精英招募', href: '/onboarding-guide' },
+  { icon: '⭐', label: '精英招募', href: '/onboarding-guide' },  
+  { icon: '📚', label: '帮助中心', href: '/help' },
 ];
 
 export default function Sidebar() {

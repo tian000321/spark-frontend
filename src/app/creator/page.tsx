@@ -2,6 +2,10 @@
 import { useState, useEffect } from 'react';
 import { CreatorContract } from '@/components/onboarding/ContractText';
 import { CONFIG } from '@/config';
+import SparkCard from '@/components/ui/SparkCard';
+import SparkButton from '@/components/ui/SparkButton';
+import SparkInput from '@/components/ui/SparkInput';
+import SparkBadge from '@/components/ui/SparkBadge';
 
 type Status = 'none' | 'pending' | 'approved' | 'signed';
 
@@ -24,7 +28,6 @@ export default function CreatorPage() {
   const [withdrawHistory, setWithdrawHistory] = useState<{ amount: string; time: string }[]>([]);
 
   useEffect(() => {
-    // 优先从 localStorage 读取状态（后续统一改为后端接口）
     const saved = localStorage.getItem('creator_status');
     if (saved) setStatus(saved as Status);
   }, []);
@@ -34,7 +37,6 @@ export default function CreatorPage() {
     localStorage.setItem('creator_status', s);
   };
 
-  // 提交申请到后端（失败时降级到 localStorage）
   const submitToBackend = async (role: string, formData: any) => {
     try {
       await fetch(`${CONFIG.API_BASE_URL}/api/applications`, {
@@ -50,7 +52,11 @@ export default function CreatorPage() {
   const handleUpload = () => {
     if (!packageName || !styleTag) { setUploadStatus('请填写名称和风格标签'); return; }
     setUploadStatus('上传中...');
-    setTimeout(() => { setUploadStatus('上传成功！已进入沙箱审核'); setPackageName(''); setStyleTag(''); }, 1500);
+    setTimeout(() => {
+      setUploadStatus('上传成功！已进入沙箱审核');
+      setPackageName('');
+      setStyleTag('');
+    }, 1500);
   };
 
   const handleBindAccount = () => {
@@ -81,159 +87,255 @@ export default function CreatorPage() {
   // ===== 入驻状态路由 =====
   if (status === 'none') return (
     <div style={{ maxWidth: 500, margin: '40px auto', padding: '0 20px' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>🎨 精英招募 · 创作者</h1>
+      <h1 style={{ fontSize: 'var(--spark-font-size-2xl)', fontWeight: 800, marginBottom: 20 }}>🎨 精英招募 · 创作者</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <input placeholder="真实姓名 / 艺名" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
-        <input placeholder="联系电话" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
-        <input placeholder="擅长风格（如 Techno/Jazz）" value={style} onChange={e => setStyle(e.target.value)} style={inputStyle} />
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+        <SparkInput value={name} onChange={e => setName(e.target.value)} placeholder="真实姓名 / 艺名" />
+        <SparkInput value={phone} onChange={e => setPhone(e.target.value)} placeholder="联系电话" />
+        <SparkInput value={style} onChange={e => setStyle(e.target.value)} placeholder="擅长风格（如 Techno/Jazz）" />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--spark-text-secondary)' }}>
           <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
           我已阅读并同意《平台原创内容协议》
         </label>
-        <button onClick={async () => {
+        <SparkButton variant="primary" fullWidth onClick={async () => {
           if (!name || !phone) return alert('请填写姓名和电话');
           if (!agreed) return alert('请同意协议');
-          // 保存到 localStorage
           localStorage.setItem('creator_status_name', name);
           localStorage.setItem('creator_status_phone', phone);
           localStorage.setItem('creator_status_detail', style);
           localStorage.setItem('creator_status_time', new Date().toLocaleString());
-          // 提交到后端
           await submitToBackend('creator', { name, phone, style });
           updateStatus('pending');
-        }} style={{ padding: 12, background: 'var(--btn-primary-bg)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 'bold', cursor: 'pointer' }}>
+        }}>
           提交申请
-        </button>
+        </SparkButton>
       </div>
     </div>
   );
 
   if (status === 'pending') return (
     <div style={{ textAlign: 'center', padding: 80 }}>
-      <h2 style={{ fontSize: 24, marginBottom: 12 }}>⏳ 审核中</h2>
-      <p style={{ color: 'var(--text-muted)' }}>您的入驻申请已提交，平台将在 1-3 个工作日内审核。</p>
-      <button onClick={() => { if (confirm('模拟审核通过？')) updateStatus('approved'); }} style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--input-border)', borderRadius: 6, background: 'var(--input-bg)', cursor: 'pointer' }}>
+      <h2 style={{ fontSize: 'var(--spark-font-size-2xl)', fontWeight: 700, marginBottom: 12 }}>⏳ 审核中</h2>
+      <p style={{ color: 'var(--spark-text-secondary)' }}>您的入驻申请已提交，平台将在 1-3 个工作日内审核。</p>
+      <SparkButton variant="secondary" style={{ marginTop: 20 }} onClick={() => { if (confirm('模拟审核通过？')) updateStatus('approved'); }}>
         模拟审核通过
-      </button>
+      </SparkButton>
     </div>
   );
 
   if (status === 'approved') return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: 40 }}>
-      <h2 style={{ fontSize: 24, marginBottom: 16 }}>📝 签署协议</h2>
-      <div style={{ background: '#f9fafb', padding: 20, borderRadius: 8, marginBottom: 20, maxHeight: 300, overflow: 'auto', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+      <h2 style={{ fontSize: 'var(--spark-font-size-2xl)', fontWeight: 700, marginBottom: 16 }}>📝 签署协议</h2>
+      <div style={{ background: 'rgba(255,255,255,0.04)', padding: 20, borderRadius: 12, marginBottom: 20, maxHeight: 300, overflow: 'auto', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap', color: 'var(--spark-text-secondary)' }}>
         {CreatorContract}
       </div>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 13, color: 'var(--spark-text-secondary)' }}>
         <input type="checkbox" onChange={e => setAgreed(e.target.checked)} />
         我已阅读并同意以上完整协议
       </label>
-      <button onClick={() => { if (!agreed) return alert('请先同意协议'); updateStatus('signed'); alert('签约成功！您已开通创作者后台。'); }} style={{ width: '100%', padding: 12, background: agreed ? 'var(--btn-primary-bg)' : '#ccc', color: '#fff', border: 'none', borderRadius: 8, fontSize: 16, fontWeight: 'bold', cursor: agreed ? 'pointer' : 'not-allowed' }}>
+      <SparkButton variant="primary" fullWidth onClick={() => { if (!agreed) return alert('请先同意协议'); updateStatus('signed'); alert('签约成功！您已开通创作者后台。'); }}>
         确认签署
-      </button>
+      </SparkButton>
     </div>
   );
 
   // ===== 已签约：创作者后台 =====
   return (
-    <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 8 }}>🎨 创作者平台</h1>
-      <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>已签约 · 上传氛围包，审核通过后进入市场。</p>
+    <div style={{ maxWidth: 960, margin: '0 auto' }}>
+      <h1 style={{ fontSize: 'var(--spark-font-size-2xl)', fontWeight: 800, marginBottom: 8 }}>🎨 创作者平台</h1>
+      <p style={{ color: 'var(--spark-text-secondary)', marginBottom: 24, fontSize: 'var(--spark-font-size-sm)' }}>
+        已签约 · 上传氛围包，审核通过后进入市场。分账比例：<strong style={{ color: 'var(--spark-brand-light)' }}>70%</strong>（前10个包100%）
+      </p>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border-color)' }}>
+      {/* 选项卡 */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 28, borderBottom: '2px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
         {(['upload', 'sandbox', 'revenue', 'withdraw'] as const).map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            style={{ padding: '10px 24px', border: 'none', background: 'transparent', borderBottom: activeTab === tab ? '2px solid var(--btn-primary-bg)' : '2px solid transparent', color: activeTab === tab ? 'var(--btn-primary-bg)' : 'var(--text-muted)', fontWeight: activeTab === tab ? 'bold' : 'normal', cursor: 'pointer', marginBottom: -2 }}>
-            {tab === 'upload' && '📤 上传'} {tab === 'sandbox' && '🧪 沙箱'} {tab === 'revenue' && '💰 收益'} {tab === 'withdraw' && '💳 提现'}
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+              padding: '10px 24px',
+              border: 'none',
+              background: 'transparent',
+              borderBottom: activeTab === tab ? '2px solid var(--spark-brand)' : '2px solid transparent',
+              color: activeTab === tab ? 'var(--spark-brand-light)' : 'var(--spark-text-secondary)',
+              fontWeight: activeTab === tab ? 600 : 400,
+              cursor: 'pointer',
+              fontSize: 'var(--spark-font-size-md)',
+              marginBottom: -14,
+              transition: 'all 0.2s',
+            }}
+          >
+            {tab === 'upload' && '📤 上传氛围包'}
+            {tab === 'sandbox' && '🧪 沙箱模拟器'}
+            {tab === 'revenue' && '💰 收益看板'}
+            {tab === 'withdraw' && '💳 提现'}
           </button>
         ))}
       </div>
 
+      {/* 上传氛围包 */}
       {activeTab === 'upload' && (
-        <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
+        <SparkCard padding={28}>
+          <h3 style={{ fontWeight: 600, marginBottom: 20, fontSize: 'var(--spark-font-size-xl)' }}>📤 上传新氛围包</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <input placeholder="氛围包名称" value={packageName} onChange={e => setPackageName(e.target.value)} style={inputStyle} />
-            <input placeholder="风格标签" value={styleTag} onChange={e => setStyleTag(e.target.value)} style={inputStyle} />
-            <div style={{ display: 'flex', gap: 16 }}>
-              <select value={bpmRange} onChange={e => setBpmRange(e.target.value)} style={inputStyle}>
-                <option value="60-80">60-80 暖场</option><option value="120-140">120-140 高潮</option><option value="70-90">70-90 Chill</option>
-              </select>
-              <select value={licenseType} onChange={e => setLicenseType(e.target.value)} style={inputStyle}>
-                <option value="exclusive">独家授权</option><option value="non-exclusive">非独家</option><option value="cc">CC</option>
-              </select>
+            <div>
+              <label style={{ fontSize: 'var(--spark-font-size-sm)', color: 'var(--spark-text-secondary)', marginBottom: 6, display: 'block' }}>氛围包名称</label>
+              <SparkInput value={packageName} onChange={e => setPackageName(e.target.value)} placeholder="例如：午夜高潮-暗夜专属" />
             </div>
-            <div style={{ border: '2px dashed var(--border-color)', padding: 32, borderRadius: 8, textAlign: 'center', color: 'var(--text-muted)' }}>📁 拖拽文件到此处 或 点击选择（.vibe JSON + 音频）</div>
-            <button onClick={handleUpload} style={{ padding: 12, background: 'var(--btn-primary-bg)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>提交审核</button>
-            {uploadStatus && <p style={{ fontSize: 13, color: uploadStatus.includes('成功') ? 'green' : 'var(--text-secondary)' }}>{uploadStatus}</p>}
+            <div>
+              <label style={{ fontSize: 'var(--spark-font-size-sm)', color: 'var(--spark-text-secondary)', marginBottom: 6, display: 'block' }}>风格标签</label>
+              <SparkInput value={styleTag} onChange={e => setStyleTag(e.target.value)} placeholder="例如：Techno / House / 暗黑" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 'var(--spark-font-size-sm)', color: 'var(--spark-text-secondary)', marginBottom: 6, display: 'block' }}>BPM 范围</label>
+                <select value={bpmRange} onChange={e => setBpmRange(e.target.value)} style={selectStyle}>
+                  <option value="60-80">60-80 暖场</option>
+                  <option value="120-140">120-140 高潮</option>
+                  <option value="70-90">70-90 Chill</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 'var(--spark-font-size-sm)', color: 'var(--spark-text-secondary)', marginBottom: 6, display: 'block' }}>授权类型</label>
+                <select value={licenseType} onChange={e => setLicenseType(e.target.value)} style={selectStyle}>
+                  <option value="exclusive">独家授权</option>
+                  <option value="non-exclusive">非独家授权</option>
+                  <option value="cc">知识共享 (CC)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* 上传区域 */}
+            <div style={{
+              border: '2px dashed rgba(255,255,255,0.12)',
+              borderRadius: 12,
+              padding: 40,
+              textAlign: 'center',
+              background: 'rgba(255,255,255,0.02)',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--spark-brand-light)'; e.currentTarget.style.background = 'rgba(108,92,231,0.04)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+            >
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📁</div>
+              <p style={{ fontWeight: 500, color: 'var(--spark-text-secondary)' }}>拖拽文件到此处 或 点击选择</p>
+              <p style={{ fontSize: 'var(--spark-font-size-xs)', color: 'var(--spark-text-muted)', marginTop: 4 }}>
+                支持 .vibe JSON 和音频文件（MP3 / WAV / FLAC）
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <SparkButton variant="primary" onClick={handleUpload}>
+                提交审核
+              </SparkButton>
+              {uploadStatus && (
+                <span style={{ fontSize: 'var(--spark-font-size-sm)', color: uploadStatus.includes('成功') ? 'var(--spark-success)' : 'var(--spark-text-secondary)' }}>
+                  {uploadStatus}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        </SparkCard>
       )}
 
+      {/* 沙箱模拟器 */}
       {activeTab === 'sandbox' && (
-        <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
-          <h3>🧪 沙箱模拟器</h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>模拟氛围包运行效果，M2 开放。</p>
-          <span style={{ padding: '6px 14px', borderRadius: 20, fontSize: 12, background: 'var(--badge-green-bg)', color: 'var(--badge-green-text)' }}>BPM 连续性 ✓</span>
-          <span style={{ marginLeft: 8, padding: '6px 14px', borderRadius: 20, fontSize: 12, background: 'var(--badge-green-bg)', color: 'var(--badge-green-text)' }}>风格一致性 ✓</span>
-        </div>
+        <SparkCard padding={28}>
+          <h3 style={{ fontWeight: 600, marginBottom: 16, fontSize: 'var(--spark-font-size-xl)' }}>🧪 沙箱模拟器</h3>
+          <p style={{ color: 'var(--spark-text-secondary)', marginBottom: 20, fontSize: 'var(--spark-font-size-sm)' }}>
+            模拟氛围包在真实场所的运行效果，测试通过后才能提交审核。
+          </p>
+          <div style={{ padding: 24, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, textAlign: 'center', marginBottom: 16 }}>
+            <p style={{ color: 'var(--spark-text-muted)', fontSize: 'var(--spark-font-size-sm)' }}>
+              🎵 沙箱模拟器将在 M2 与后端集成后开放
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <SparkBadge variant="success">BPM 连续性 ✓</SparkBadge>
+            <SparkBadge variant="success">风格一致性 ✓</SparkBadge>
+            <SparkBadge variant="warning">红线检测待集成</SparkBadge>
+          </div>
+        </SparkCard>
       )}
 
+      {/* 收益看板 */}
       {activeTab === 'revenue' && (
-        <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
-          <h3 style={{ marginBottom: 16 }}>💰 收益看板</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
-            <div style={{ background: '#f0f9ff', padding: 20, borderRadius: 10, textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-muted)' }}>累计收益</p>
-              <p style={{ fontSize: 28, fontWeight: 'bold', color: 'var(--btn-primary-bg)' }}>¥{revenueTotal.toFixed(2)}</p>
+        <SparkCard padding={28}>
+          <h3 style={{ fontWeight: 600, marginBottom: 20, fontSize: 'var(--spark-font-size-xl)' }}>💰 收益看板</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
+            <div style={{ background: 'rgba(108,92,231,0.08)', padding: 24, borderRadius: 12, textAlign: 'center' }}>
+              <p style={{ color: 'var(--spark-text-secondary)', fontSize: 'var(--spark-font-size-sm)', marginBottom: 8 }}>累计收益</p>
+              <p style={{ fontSize: 32, fontWeight: 700, color: 'var(--spark-brand-light)' }}>¥{revenueTotal.toFixed(2)}</p>
             </div>
-            <div style={{ background: '#f0fdf4', padding: 20, borderRadius: 10, textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-muted)' }}>调用次数</p>
-              <p style={{ fontSize: 28, fontWeight: 'bold', color: '#16a34a' }}>{plays}</p>
+            <div style={{ background: 'rgba(16,185,129,0.08)', padding: 24, borderRadius: 12, textAlign: 'center' }}>
+              <p style={{ color: 'var(--spark-text-secondary)', fontSize: 'var(--spark-font-size-sm)', marginBottom: 8 }}>调用次数</p>
+              <p style={{ fontSize: 32, fontWeight: 700, color: '#10b981' }}>{plays}</p>
             </div>
-            <div style={{ background: '#fefce8', padding: 20, borderRadius: 10, textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-muted)' }}>分账比例</p>
-              <p style={{ fontSize: 28, fontWeight: 'bold', color: '#ca8a04' }}>70%</p>
+            <div style={{ background: 'rgba(245,158,11,0.08)', padding: 24, borderRadius: 12, textAlign: 'center' }}>
+              <p style={{ color: 'var(--spark-text-secondary)', fontSize: 'var(--spark-font-size-sm)', marginBottom: 8 }}>分账比例</p>
+              <p style={{ fontSize: 32, fontWeight: 700, color: '#f59e0b' }}>70%</p>
             </div>
           </div>
-        </div>
+        </SparkCard>
       )}
 
+      {/* 提现 */}
       {activeTab === 'withdraw' && (
-        <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12 }}>
-          <h3 style={{ marginBottom: 16 }}>💳 提现</h3>
-          <div style={{ marginBottom: 24, padding: 16, background: '#f9fafb', borderRadius: 8 }}>
-            <p style={{ fontWeight: 500, marginBottom: 12 }}>提现账户 (本人实名)</p>
+        <SparkCard padding={28}>
+          <h3 style={{ fontWeight: 600, marginBottom: 20, fontSize: 'var(--spark-font-size-xl)' }}>💳 提现</h3>
+          <div style={{ marginBottom: 24, padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ fontWeight: 600, marginBottom: 12, fontSize: 'var(--spark-font-size-sm)' }}>提现账户 (本人实名)</p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-              <select id="accountType" style={{ ...inputStyle, minWidth: 120 }}>
-                <option value="wechat">微信支付</option><option value="alipay">支付宝</option><option value="bank">银行卡</option>
+              <select id="accountType" style={selectStyle}>
+                <option value="wechat">微信支付</option>
+                <option value="alipay">支付宝</option>
+                <option value="bank">银行卡</option>
               </select>
-              <input id="accountName" placeholder="户名" style={{ ...inputStyle, flex: 1 }} />
-              <input id="accountNumber" placeholder="账号" style={{ ...inputStyle, flex: 1 }} />
-              <button onClick={handleBindAccount} style={{ padding: '10px 20px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>绑定 / 更新</button>
+              <SparkInput id="accountName" placeholder="户名" style={{ flex: 1, minWidth: 120 }} />
+              <SparkInput id="accountNumber" placeholder="账号" style={{ flex: 1, minWidth: 120 }} />
+              <SparkButton variant="secondary" size="sm" onClick={handleBindAccount}>绑定 / 更新</SparkButton>
             </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>* 请绑定本人实名账户，提现信息与绑定账户一致方可提现。</p>
+            <p style={{ fontSize: 'var(--spark-font-size-xs)', color: 'var(--spark-text-muted)' }}>
+              * 请绑定本人实名账户，提现信息与绑定账户一致方可提现。
+            </p>
           </div>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>可提现余额：<strong>¥{revenueTotal.toFixed(2)}</strong></p>
+          <p style={{ color: 'var(--spark-text-secondary)', fontSize: 'var(--spark-font-size-sm)', marginBottom: 16 }}>
+            可提现余额：<strong style={{ color: 'var(--spark-text-primary)', fontSize: 'var(--spark-font-size-xl)' }}>¥{revenueTotal.toFixed(2)}</strong>
+          </p>
           <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-            <input placeholder="提现金额" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-            <button onClick={handleWithdraw} style={{ padding: '10px 24px', background: 'var(--btn-success-bg)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>申请提现</button>
+            <SparkInput
+              type="number"
+              value={withdrawAmount}
+              onChange={e => setWithdrawAmount(e.target.value)}
+              placeholder="提现金额"
+              style={{ flex: 1 }}
+            />
+            <SparkButton variant="primary" onClick={handleWithdraw}>申请提现</SparkButton>
           </div>
-          <div style={{ fontSize: 13 }}>
-            <p style={{ fontWeight: 500, marginBottom: 8 }}>提现记录</p>
-            {withdrawHistory.length === 0 && <p style={{ color: 'var(--text-muted)' }}>暂无记录</p>}
+          <div style={{ fontSize: 'var(--spark-font-size-sm)' }}>
+            <p style={{ fontWeight: 600, marginBottom: 8 }}>提现记录</p>
+            {withdrawHistory.length === 0 && <p style={{ color: 'var(--spark-text-muted)', textAlign: 'center', padding: 12 }}>暂无记录</p>}
             {withdrawHistory.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-color)' }}>
-                <span>¥{item.amount}</span><span style={{ color: 'var(--text-muted)' }}>{item.time}</span>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span>¥{item.amount}</span>
+                <span style={{ color: 'var(--spark-text-muted)' }}>{item.time}</span>
               </div>
             ))}
           </div>
-        </div>
+        </SparkCard>
       )}
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', border: '1px solid var(--input-border)', borderRadius: 8, fontSize: 14,
-  background: 'var(--input-bg)', color: 'var(--text-primary)', boxSizing: 'border-box'
+const selectStyle: React.CSSProperties = {
+  padding: '10px 14px',
+  border: '1px solid rgba(255,255,255,0.12)',
+  borderRadius: 8,
+  fontSize: 14,
+  background: 'rgba(255,255,255,0.06)',
+  color: '#fff',
+  width: '100%',
+  boxSizing: 'border-box',
 };

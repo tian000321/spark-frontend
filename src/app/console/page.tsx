@@ -1,12 +1,11 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import SparkCard from '@/components/ui/SparkCard';
 import SparkButton from '@/components/ui/SparkButton';
 import SparkBadge from '@/components/ui/SparkBadge';
-import VirtualTurntable from '@/components/VirtualTurntable';
+import DJController from '@/components/DJController';
 
-// ==================== 数据 & 工具函数 ====================
 const mediaLibrary = [
   { id: 'a1', title: 'Midnight Pulse', artist: 'DeepWaves', type: 'audio', style: 'Techno', bpm: 128, duration: '4:32' },
   { id: 'a2', title: 'City Lights', artist: 'LateNight', type: 'audio', style: 'Jazz', bpm: 72, duration: '3:50' },
@@ -26,7 +25,6 @@ const vibePacks = [
 
 const generateSpectrum = (bpm: number) => Array.from({ length: 32 }, () => Math.floor(Math.random() * 100 * (bpm / 120)));
 
-// ==================== 频谱可视化 ====================
 const SpectrumVisualizer = ({ bpm }: { bpm: number }) => {
   const [spectrum, setSpectrum] = useState(generateSpectrum(bpm));
   useEffect(() => {
@@ -45,7 +43,6 @@ const SpectrumVisualizer = ({ bpm }: { bpm: number }) => {
   );
 };
 
-// ==================== 媒体播放器 ====================
 const MediaPlayer = ({ item, onStop }: { item: any; onStop: () => void }) => (
   <div style={{ marginBottom: 20 }}>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -68,7 +65,6 @@ const MediaPlayer = ({ item, onStop }: { item: any; onStop: () => void }) => (
   </div>
 );
 
-// ==================== 媒体列表表格 ====================
 const MediaTable = ({ items, onPlay }: { items: any[]; onPlay: (item: any) => void }) => (
   <div style={{ overflowX: 'auto' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -90,7 +86,6 @@ const MediaTable = ({ items, onPlay }: { items: any[]; onPlay: (item: any) => vo
   </div>
 );
 
-// ==================== 点歌队列 ====================
 const SongRequestSystem = ({ requests, setRequests, playNext, mode }: any) => {
   const [requestName, setRequestName] = useState('');
   const handleSubmit = () => { if (!requestName.trim()) return; setRequests((prev: string[]) => [...prev, requestName]); setRequestName(''); };
@@ -130,7 +125,6 @@ const SongRequestSystem = ({ requests, setRequests, playNext, mode }: any) => {
   );
 };
 
-// ==================== 声光电智控面板 ====================
 const SoundLightPanel = ({ bpm, setBpm, currentMode, setCurrentMode }: any) => {
   const [autoMode, setAutoMode] = useState(false);
   const [lightMode, setLightMode] = useState('暖黄渐变');
@@ -182,7 +176,6 @@ const SoundLightPanel = ({ bpm, setBpm, currentMode, setCurrentMode }: any) => {
   );
 };
 
-// ==================== 否决按钮 ====================
 const VetoButton = ({ onVeto }: { onVeto: () => void }) => {
   const [pressed, setPressed] = useState(false);
   const handlePress = () => { setPressed(true); onVeto(); setTimeout(() => setPressed(false), 2000); };
@@ -198,7 +191,6 @@ const VetoButton = ({ onVeto }: { onVeto: () => void }) => {
 const inputStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, fontSize: 14, background: 'rgba(255,255,255,0.06)', color: 'var(--spark-text-primary)' };
 const selectStyle: React.CSSProperties = { width: '100%', padding: 8, borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: 'var(--spark-text-primary)' };
 
-// ==================== 主组件 ====================
 export default function ConsolePage() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'media';
@@ -217,7 +209,6 @@ export default function ConsolePage() {
   const [autoTune, setAutoTune] = useState(true);
   const [reverb, setReverb] = useState(30);
   const [songRequests, setSongRequests] = useState<string[]>(['告白气球 - 周杰伦', 'Last Dance - 伍佰']);
-  const [isVetoed, setIsVetoed] = useState(false);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -238,12 +229,9 @@ export default function ConsolePage() {
   };
 
   const handleVeto = () => {
-    setIsVetoed(true);
     handleModeChange('MODE_D');
-    setTimeout(() => setIsVetoed(false), 3000);
   };
 
-  // 修复：切歌功能
   const playNext = () => {
     if (songRequests.length > 0) {
       setSongRequests(prev => prev.slice(1));
@@ -255,7 +243,6 @@ export default function ConsolePage() {
       <h1 style={{ fontSize: 'var(--spark-font-size-2xl)', fontWeight: 800, marginBottom: 8 }}>🎛️ 智能嗨吧控台</h1>
       <p style={{ color: 'var(--spark-text-secondary)', marginBottom: 24 }}>实时掌控现场氛围 · 旋转选模式，按下急停，一切尽在指尖</p>
 
-      {/* 实时指标卡片 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
         <SparkCard padding={16} style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--spark-font-size-xs)', color: 'var(--spark-text-secondary)' }}>实时 BPM</div>
@@ -272,7 +259,6 @@ export default function ConsolePage() {
         </SparkCard>
       </div>
 
-      {/* 计划解释器 */}
       <SparkCard padding={20} style={{ borderLeft: '4px solid var(--spark-brand)', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <span>🤖 AI 计划解释器</span>
@@ -286,7 +272,6 @@ export default function ConsolePage() {
         </div>
       </SparkCard>
 
-      {/* 选项卡 */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', borderBottom: '2px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
         {[
           { key: 'media', label: '🎬 媒体库' }, { key: 'dj', label: '🎧 DJ模式' }, { key: 'sing', label: '🎤 唱歌模式' },
@@ -296,9 +281,7 @@ export default function ConsolePage() {
         ))}
       </div>
 
-      {/* 内容区 */}
       <SparkCard padding={20}>
-        {/* 媒体库 */}
         {activeTab === 'media' && (
           <>
             {playingItem && <MediaPlayer item={playingItem} onStop={() => setPlayingItem(null)} />}
@@ -313,21 +296,12 @@ export default function ConsolePage() {
           </>
         )}
 
-        {/* DJ模式 */}
         {activeTab === 'dj' && (
           <div style={{ marginTop: 10 }}>
-            <VirtualTurntable
-              onPlan={(plan) => setPlan({ summary: plan, details: 'AI 正在执行混音计划...' })}
-              onCompensation={() => {
-                setCost(prev => prev + 5.0);
-                setPlan({ summary: '⚠️ 赔付通知：AI DJ 混音失败', details: '已自动赔付 ¥5.00，信任准备金已扣款。' });
-              }}
-              isVetoed={isVetoed}
-            />
+            <DJController />
           </div>
         )}
 
-        {/* 唱歌模式 */}
         {activeTab === 'sing' && (
           <>
             {playingItem && <MediaPlayer item={playingItem} onStop={() => setPlayingItem(null)} />}
@@ -351,10 +325,8 @@ export default function ConsolePage() {
           </>
         )}
 
-        {/* 声光电智控 */}
         {activeTab === 'scene' && <SoundLightPanel bpm={bpm} setBpm={setBpm} currentMode={currentMode} setCurrentMode={handleModeChange} />}
 
-        {/* 智能调音 */}
         {activeTab === 'tuner' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {['low', 'mid', 'high'].map(band => (
@@ -367,7 +339,6 @@ export default function ConsolePage() {
           </div>
         )}
 
-        {/* 嗨吧市场 */}
         {activeTab === 'market' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
             {vibePacks.map(p => (
@@ -384,7 +355,6 @@ export default function ConsolePage() {
         )}
       </SparkCard>
 
-      {/* 否决按钮 + 设备状态 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
         <SparkCard padding={24} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <VetoButton onVeto={handleVeto} />
