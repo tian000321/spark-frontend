@@ -1,70 +1,80 @@
+/* ===== 星火科技 · Spark Design System ===== */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f5f7fa;
-  --bg-card: #ffffff;
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --text-muted: #999999;
-  --border-color: #eeeeee;
-  --header-bg: #0B2B4E;
-  --header-text: #ffffff;
-  --btn-primary-bg: #0B2B4E;
-  --btn-primary-text: #ffffff;
-  --btn-success-bg: #2E7D32;
-  --btn-success-text: #ffffff;
-  --badge-green-bg: #e8f5e9;
-  --badge-green-text: #2E7D32;
-  --badge-blue-bg: #e3f2fd;
-  --badge-blue-text: #1565C0;
-  --badge-red-bg: #ffebee;
-  --badge-red-text: #D32F2F;
-  --badge-orange-bg: #fff3e0;
-  --badge-orange-text: #E65100;
-  --input-bg: #ffffff;
-  --input-border: #dddddd;
-  --shadow: 0 1px 3px rgba(0,0,0,0.05);
+  /* 背景色 */
+  --spark-bg-primary: #0A0A0F;
+  --spark-bg-secondary: #15151E;
+  --spark-bg-card: rgba(255, 255, 255, 0.04);
+  --spark-bg-card-hover: rgba(255, 255, 255, 0.06);
+  --spark-bg-input: rgba(255, 255, 255, 0.06);
+
+  /* 文字色 */
+  --spark-text-primary: #F5F5F7;
+  --spark-text-secondary: #A0A0B0;
+  --spark-text-muted: #6B6B7B;
+
+  /* 品牌色 */
+  --spark-brand: #6C5CE7;
+  --spark-brand-light: #A29BFE;
+  --spark-brand-gradient: linear-gradient(135deg, #6C5CE7, #A29BFE);
+  --spark-success: #10B981;
+  --spark-success-bg: rgba(16, 185, 129, 0.12);
+  --spark-danger: #EF4444;
+  --spark-danger-bg: rgba(239, 68, 68, 0.12);
+  --spark-warning: #F59E0B;
+  --spark-warning-bg: rgba(245, 158, 11, 0.12);
+
+  /* 圆角 */
+  --spark-radius-sm: 8px;
+  --spark-radius-md: 14px;
+  --spark-radius-lg: 20px;
+  --spark-radius-full: 9999px;
+
+  /* 阴影 */
+  --spark-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --spark-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --spark-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* 字体 */
+  --spark-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --spark-font-size-xs: 12px;
+  --spark-font-size-sm: 13px;
+  --spark-font-size-md: 14px;
+  --spark-font-size-lg: 16px;
+  --spark-font-size-xl: 20px;
+  --spark-font-size-2xl: 28px;
+
+  /* 过渡 */
+  --spark-transition: all 0.2s ease;
 }
 
-html[data-theme="dark"] {
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-card: #0f3460;
-  --text-primary: #e0e0e0;
-  --text-secondary: #b0b0b0;
-  --text-muted: #808080;
-  --border-color: #2a2a4a;
-  --header-bg: #0f3460;
-  --header-text: #e0e0e0;
-  --btn-primary-bg: #e94560;
-  --btn-primary-text: #ffffff;
-  --btn-success-bg: #2E7D32;
-  --btn-success-text: #ffffff;
-  --badge-green-bg: #1e3a2f;
-  --badge-green-text: #81c784;
-  --badge-blue-bg: #1a2a4a;
-  --badge-blue-text: #64b5f6;
-  --badge-red-bg: #4a1a1a;
-  --badge-red-text: #ef9a9a;
-  --badge-orange-bg: #4a3a1a;
-  --badge-orange-text: #ffb74d;
-  --input-bg: #16213e;
-  --input-border: #2a2a4a;
-  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+/* 全局基础样式 */
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  font-family: var(--spark-font-family);
+  background: var(--spark-bg-primary);
+  color: var(--spark-text-primary);
+  -webkit-font-smoothing: antialiased;
 }
-* { box-sizing: border-box; }
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .desktop-nav { display: none !important; }
-  .hamburger-btn { display: block !important; }
-  .compliance-indicator { display: none; }
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-@media (min-width: 769px) {
-  .mobile-menu { display: none !important; }
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
