@@ -1,14 +1,27 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import SparkCard from '@/components/ui/SparkCard';
+import SparkInput from '@/components/ui/SparkInput';
+import SparkBadge from '@/components/ui/SparkBadge';
+import AreaSelector from '@/components/AreaSelector';
 
 interface MarketNode {
-  id: string; name: string; gpu: string; region: string; status: string;
-  temperature: number; network: string; idleMemory: string; price: string;
-  tasks: number; provider: string; rating: string; mlperf: number;
+  id: string;
+  name: string;
+  gpu: string;
+  region: string;
+  status: string;
+  temperature: number;
+  network: string;
+  idleMemory: string;
+  price: string;
+  tasks: number;
+  provider: string;
+  rating: string;
+  mlperf: number;
 }
 
-const REGIONS = ['全部地区', '贵州·贵阳·云岩区', '广东·深圳·南山区', '四川·成都·高新区', '北京·海淀区'];
 const MOCK_NODES: MarketNode[] = [
   { id: 'node-1', name: 'A100-贵阳超算', gpu: 'A100×8', region: '贵州·贵阳·云岩区', status: '在线', temperature: 64, network: '10Gbps', idleMemory: '120GB/640GB', price: '¥12.00/时', tasks: 450, provider: '星辰算力', rating: 'S', mlperf: 94.2 },
   { id: 'node-2', name: 'RTX4090 工作站', gpu: 'RTX 4090×4', region: '广东·深圳·南山区', status: '在线', temperature: 58, network: '1000Mbps', idleMemory: '32GB/96GB', price: '¥8.00/时', tasks: 210, provider: '鹏城实验室', rating: 'A', mlperf: 88.5 },
@@ -19,11 +32,11 @@ const ratingColors: Record<string, string> = { S: '#10b981', A: '#3b82f6', B: '#
 
 export default function NodeMarketPage() {
   const [search, setSearch] = useState('');
-  const [regionFilter, setRegionFilter] = useState('全部地区');
+  const [region, setRegion] = useState('');
   const [gpuFilter, setGpuFilter] = useState('all');
 
   const filteredNodes = MOCK_NODES.filter(node => {
-    if (regionFilter !== '全部地区' && node.region !== regionFilter) return false;
+    if (region && node.region !== region) return false;
     if (gpuFilter !== 'all' && !node.gpu.includes(gpuFilter)) return false;
     if (search && !node.name.includes(search) && !node.provider.includes(search)) return false;
     return true;
@@ -32,14 +45,12 @@ export default function NodeMarketPage() {
   return (
     <div style={{ padding: '40px 20px', maxWidth: 1200, margin: '0 auto' }}>
       <h1 style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 4 }}>🖥️ 算力节点市场</h1>
-      <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>全球异构算力调度网络 · 首年0平台抽佣</p>
+      <p style={{ color: 'var(--spark-text-secondary)', marginBottom: 24 }}>全球异构算力调度网络 · 首年0平台抽佣</p>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-        <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索节点或提供者..." style={{ flex: 1, minWidth: 200, padding: '10px 16px', border: '1px solid var(--input-border)', borderRadius: 8, fontSize: 14, background: 'var(--input-bg)', color: 'var(--text-primary)' }} />
-        <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)} style={{ padding: '10px 16px', border: '1px solid var(--input-border)', borderRadius: 8, fontSize: 14, background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
-          {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
-        </select>
-        <select value={gpuFilter} onChange={e => setGpuFilter(e.target.value)} style={{ padding: '10px 16px', border: '1px solid var(--input-border)', borderRadius: 8, fontSize: 14, background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
+        <SparkInput value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索节点或提供者..." style={{ flex: 1, minWidth: 200 }} />
+        <AreaSelector value={region} onChange={setRegion} />
+        <select value={gpuFilter} onChange={e => setGpuFilter(e.target.value)} style={selectStyle}>
           <option value="all">全部 GPU</option>
           <option value="A100">A100</option>
           <option value="RTX 4090">RTX 4090</option>
@@ -80,3 +91,8 @@ export default function NodeMarketPage() {
     </div>
   );
 }
+
+const selectStyle: React.CSSProperties = {
+  padding: '10px 16px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, fontSize: 14,
+  background: 'rgba(255,255,255,0.06)', color: '#fff', boxSizing: 'border-box'
+};
